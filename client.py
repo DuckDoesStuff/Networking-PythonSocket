@@ -1,11 +1,7 @@
-import json
-from ipaddress import collapse_addresses
+from socket import *
+from threading import *
+from ipaddress import *
 from tkinter import *
-from turtle import window_height
-from urllib.parse import uses_fragment
-
-def sayHello():
-    print("Hello there")
 
 root = Tk()
 root.geometry('925x500+300+200')        #Set window size and position
@@ -13,7 +9,7 @@ root.resizable(False, False)            #Disable X and Y resizing
 root.title('Testing')
 
 class SignIn:
-    def __init__(self, frame):
+    def __init__(self, frame, socket):
         frame = Frame(frame, width=350, height=350, bg='white')
         frame.place(x=0, y=0)
         # Header title
@@ -66,35 +62,37 @@ class SignIn:
     def on_leave_pswd(self, e):
         self.psw = self.pswd.get()
         if self.psw == '':
-            self.pswd.insert(0, 'Password')
-        self.unbind('<FocusOut>')           
+            self.pswd.insert(0, 'Password')        
+        self.unbind('<FocusOut>')
     
     def sign_in(self):
-        self.name = self.user.get()
-        self.psw = self.pswd.get()
         if self.name == 'Username' or self.psw == 'Password':
             print("Fields can't be empty")
             return
+        
+        print("Success")
+        # option = 'LOGIN'
+        # socket.sendall(option.encode('utf8'))
 
         # Open and store data as a python object
-        f = open('accounts.json', 'r')
-        file_data = json.load(f)
-        f.close()
+        # f = open('accounts.json', 'r')
+        # file_data = json.load(f)
+        # f.close()
 
-        j = 0
-        for i in file_data['username']:
-            if i == self.name:
-                if file_data['password'][j] == self.psw:
-                    print("Login succesfully")
-                    return
-                print("Wrong password")
-                return
-            j += 1
+        # j = 0
+        # for i in file_data['username']:
+        #     if i == self.name:
+        #         if file_data['password'][j] == self.psw:
+        #             print("Login succesfully")
+        #             return
+        #         print("Wrong password")
+        #         return
+        #     j += 1
         
-        print("Username doesn't exist")
+        # print("Username doesn't exist")
 
 class SignUp:
-    def __init__(self, frame):
+    def __init__(self, frame, socket):
         self.sgup = Button(frame, width=10, text="Sign up", activebackground='red', 
                         font=('Consolas', 11), bd=0, bg='black', fg='white', command=self.sign_up_form)
         self.sgup.place(x=138, y=320)
@@ -102,7 +100,6 @@ class SignUp:
     def sign_up_form(self):
         frame = Frame(root, width=350, height=350, bg='white')
         frame.place(x=0, y=0)
-
         # Header title
         self.heading = Label(frame, text='Sign up', fg='#06283D',
                                 bg='#DFF6FF', font=('Consolas', 19, 'bold'))
@@ -155,29 +152,34 @@ class SignUp:
         if self.name == 'Username' or self.psw == 'Password':
             print("Fields can't be empty")
             return
+        print("Success")
+        # f = open('accounts.json', 'r+')
+        # file_data = json.load(f)
 
-        f = open('accounts.json', 'r+')
-        file_data = json.load(f)
+        # for i in file_data['username']:
+        #     if i == self.name:
+        #         print('Username existed')
+        #         return
 
-        for i in file_data['username']:
-            if i == self.name:
-                print('Username existed')
-                return
+        # # Append new user's account to database
+        # file_data['username'].append(self.name)
+        # file_data['password'].append(self.psw)
 
-        # Append new user's account to database
-        file_data['username'].append(self.name)
-        file_data['password'].append(self.psw)
+        # f.seek(0)
+        # json.dump(file_data, f, indent=4)
 
-        f.seek(0)
-        json.dump(file_data, f, indent=4)
+        # print("Create account succesfully")
+        # f.close()
 
-        print("Create account succesfully")
-        f.close()
+HOST = '127.0.0.1'
+PORT = 33000
+ADDR = (HOST, PORT)
 
+client_socket = socket(AF_INET, SOCK_STREAM)
+client_socket.connect(ADDR)
 
-
-signin = SignIn(root)
-signup = SignUp(root)
+signin = SignIn(root, client_socket)
+signup = SignUp(root, client_socket)
 
 
 root.mainloop()

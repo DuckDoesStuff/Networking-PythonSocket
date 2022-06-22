@@ -1,8 +1,10 @@
 {
     "username": [
-        "Ducky"
+        "Ducky",
+        "Duck"
     ],
     "password": [
-        "123"
+        "123",
+        "123456"
     ]
 }

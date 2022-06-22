@@ -12,6 +12,7 @@ class SignIn:
     def __init__(self, frame, socket):
         frame = Frame(frame, width=350, height=350, bg='white')
         frame.place(x=0, y=0)
+        self.socket = socket
         # Header title
         self.heading = Label(frame, text='Sign in', fg='#06283D',
                                 bg='#DFF6FF', font=('Consolas', 19, 'bold'))
@@ -39,8 +40,9 @@ class SignIn:
         self.btn.place(x=138, y=270)
 
         # Need an account?
-        self.label = Label(frame, text="Need an account?", font=("Consolas", 9), fg='black', bg='#1363DF', bd=0)
-        self.label.place(x=122, y=295)
+        self.sign_up = SignUp(root, self.socket)
+        # self.label = Label(frame, text="Need an account?", font=("Consolas", 9), fg='black', bg='#1363DF', bd=0)
+        # self.label.place(x=122, y=295)
        
 
     def on_enter_user(self, e):
@@ -52,7 +54,7 @@ class SignIn:
         self.name = self.user.get()
         if self.name == '':
             self.user.insert(0, 'Username')
-        self.unbind('<FocusOut>')
+        # self.user.unbind('<FocusOut>')
 
     def on_enter_pswd(self, e):
         self.psw = self.pswd.get()
@@ -63,36 +65,32 @@ class SignIn:
         self.psw = self.pswd.get()
         if self.psw == '':
             self.pswd.insert(0, 'Password')        
-        self.unbind('<FocusOut>')
+        # self.pswd.unbind('<FocusOut>')
     
     def sign_in(self):
+        self.name = self.user.get()
+        self.psw = self.pswd.get()
+
         if self.name == 'Username' or self.psw == 'Password':
             print("Fields can't be empty")
             return
         
-        print("Success")
-        # option = 'LOGIN'
-        # socket.sendall(option.encode('utf8'))
+        # Notify server client is logging in
+        option = "LOGIN"
+        self.socket.sendall(option.encode('utf8'))
 
-        # Open and store data as a python object
-        # f = open('accounts.json', 'r')
-        # file_data = json.load(f)
-        # f.close()
+        # Sending client's data
+        self.socket.sendall(self.name.encode('utf8'))
+        self.socket.recv(1024)
 
-        # j = 0
-        # for i in file_data['username']:
-        #     if i == self.name:
-        #         if file_data['password'][j] == self.psw:
-        #             print("Login succesfully")
-        #             return
-        #         print("Wrong password")
-        #         return
-        #     j += 1
-        
-        # print("Username doesn't exist")
+        self.socket.sendall(self.psw.encode('utf8'))
+        self.socket.recv(1024)
+
+        print("Sign in data sent")
 
 class SignUp:
     def __init__(self, frame, socket):
+        self.socket = socket
         self.sgup = Button(frame, width=10, text="Sign up", activebackground='red', 
                         font=('Consolas', 11), bd=0, bg='black', fg='white', command=self.sign_up_form)
         self.sgup.place(x=138, y=320)
@@ -152,24 +150,20 @@ class SignUp:
         if self.name == 'Username' or self.psw == 'Password':
             print("Fields can't be empty")
             return
-        print("Success")
-        # f = open('accounts.json', 'r+')
-        # file_data = json.load(f)
 
-        # for i in file_data['username']:
-        #     if i == self.name:
-        #         print('Username existed')
-        #         return
+        # Notify server client is signing up
+        option = "SIGNUP"
+        self.socket.sendall(option.encode('utf8'))
+        self.socket.recv(1024)
 
-        # # Append new user's account to database
-        # file_data['username'].append(self.name)
-        # file_data['password'].append(self.psw)
+        # Sending client's data
+        self.socket.sendall(self.name.encode('utf8'))
+        self.socket.recv(1024)
 
-        # f.seek(0)
-        # json.dump(file_data, f, indent=4)
+        self.socket.sendall(self.psw.encode('utf8'))
+        self.socket.recv(1024)
 
-        # print("Create account succesfully")
-        # f.close()
+        print("Sign up data sent")
 
 HOST = '127.0.0.1'
 PORT = 33000
@@ -179,7 +173,6 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 
 signin = SignIn(root, client_socket)
-signup = SignUp(root, client_socket)
 
 
 root.mainloop()

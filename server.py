@@ -15,10 +15,80 @@ def accept_incoming_connections():
 def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
     while True:
-        option = client.recv(1024).decode('utf8')
+        try:
+            option = client.recv(1024).decode('utf8')
+        except:
+            break
+        if not option:
+            break
 
-        if option == 'LOGIN':
-            print("Logging in")
+        match option:
+            case "LOGIN":
+                print("Logging in")
+
+                client_name = client.recv(1024).decode('utf8')
+                client.sendall(client_name.encode('utf8'))
+
+                client_psw = client.recv(1024).decode('utf8')
+                client.sendall(client_psw.encode('utf8'))
+
+                print(client_name)
+                print(client_psw)
+
+                #Open and store loaded data as a python object
+                f = open('accounts.json', 'r')
+                file_data = json.load(f)
+                f.close()
+
+                j = 0
+                loggedIn = False
+                for i in file_data['username']:
+                    if i == client_name:
+                        if file_data['password'][j] == client_psw:
+                            print("Login succesfully")
+                            loggedIn = True
+                            break
+                        print("Wrong password")
+                        break
+                    j += 1
+                
+                if not loggedIn:
+                    print("Logging in failed")  
+            case "SIGNUP":
+                print("Signing up")
+
+                client_name = client.recv(1024).decode('utf8')
+                client.sendall(client_name.encode('utf8'))
+
+                client_psw = client.recv(1024).decode('utf8')
+                client.sendall(client_psw.encode('utf8'))
+
+                f = open('accounts.json', 'r+')
+                file_data = json.load(f)
+
+                for i in file_data['username']:
+                    if i == client_name:
+                        print('Username existed')
+                        f.close()
+                        return
+
+                # Append new user's account to database
+                file_data['username'].append(client_name)
+                file_data['password'].append(client_psw)
+
+                f.seek(0)
+                json.dump(file_data, f, indent=4)
+
+                print("Create account succesfully")
+                f.close()
+
+                print(client_name)
+                print(client_psw)
+
+
+            
+    print("Disconnected")
+    client.close()
 
 
 

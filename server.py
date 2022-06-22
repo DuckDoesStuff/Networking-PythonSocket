@@ -53,7 +53,8 @@ def handle_client(client):  # Takes client socket as argument.
                     j += 1
                 
                 if not loggedIn:
-                    print("Logging in failed")  
+                    print("Logging in failed")
+                break
             case "SIGNUP":
                 print("Signing up")
 

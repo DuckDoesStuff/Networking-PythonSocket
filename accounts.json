@@ -1,10 +1,12 @@
 {
     "username": [
         "Ducky",
-        "Duck"
+        "Duck",
+        "Duck123"
     ],
     "password": [
         "123",
+        "123456",
         "123456"
     ]
 }

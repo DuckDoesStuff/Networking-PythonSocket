@@ -154,7 +154,6 @@ class SignUp:
         # Notify server client is signing up
         option = "SIGNUP"
         self.socket.sendall(option.encode('utf8'))
-        self.socket.recv(1024)
 
         # Sending client's data
         self.socket.sendall(self.name.encode('utf8'))

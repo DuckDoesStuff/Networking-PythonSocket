@@ -59,7 +59,16 @@ class SignIn:
         self.socket.recv(1024)
 
         print("Sign in data sent")
-    
+
+        response = self.socket.recv(1024).decode(FORMAT)
+
+        if response != "LOGGEDIN":
+            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
+            announce.place(x=55, y=175)
+        else:
+            self.frame.destroy()
+            MainHome(root, self.socket)
+
     def sign_up(self):
         self.frame.destroy()
         SignUp(root, self.socket)
@@ -121,9 +130,23 @@ class SignUp:
 
         print("Sign up data sent")
 
+        response = self.socket.recv(1024)
+
+        if response != "SIGNEDUP":
+            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
+            announce.place(x=80, y=175)
+        else:
+            pass
+
     def sign_in(self):
         self.frame.destroy()
         SignIn(root, self.socket)
+
+class MainHome:
+    def __init__(self, frame, socket):
+        self.socket = socket
+        self.frame = Frame(frame, width=925, height=500, bg='red')
+        self.frame.place(x=0, y=0)
 
 HOST = '127.0.0.1'
 PORT = 33000

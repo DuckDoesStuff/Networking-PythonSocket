@@ -22,72 +22,82 @@ def handle_client(client):  # Takes client socket as argument.
         if not option:
             break
 
-        match option:
-            case "LOGIN":
-                print("Logging in")
+        if option == "LOGIN":
+            print("Logging in")
 
-                client_name = client.recv(1024).decode(FORMAT)
-                client.sendall(client_name.encode(FORMAT))
+            client_name = client.recv(1024).decode(FORMAT)
+            client.sendall(client_name.encode(FORMAT))
 
-                client_psw = client.recv(1024).decode(FORMAT)
-                client.sendall(client_psw.encode(FORMAT))
+            client_psw = client.recv(1024).decode(FORMAT)
+            client.sendall(client_psw.encode(FORMAT))
 
-                print(client_name)
-                print(client_psw)
+            print(client_name)
+            print(client_psw)
 
-                #Open and store loaded data as a python object
-                f = open('accounts.json', 'r')
-                file_data = json.load(f)
-                f.close()
+            #Open and store loaded data as a python object
+            f = open('accounts.json', 'r')
+            file_data = json.load(f)
+            f.close()
 
-                j = 0
-                loggedIn = False
-                for i in file_data['username']:
-                    if i == client_name:
-                        if file_data['password'][j] == client_psw:
-                            print("Login succesfully")
-                            loggedIn = True
-                            break
-                        print("Wrong password")
+            j = 0
+            loggedIn = False
+            for i in file_data['username']:
+                if i == client_name:
+                    if file_data['password'][j] == client_psw:
+                        print("Login succesfully")
+                        loggedIn = True
                         break
-                    j += 1
-                
-                if not loggedIn:
-                    print("Logging in failed")
-            
-            case "SIGNUP":
-                print("Signing up")
+                    print("Wrong password")
+                    break
+                j += 1
 
-                client_name = client.recv(1024).decode(FORMAT)
-                client.sendall(client_name.encode(FORMAT))
+            msg = ""
+            if not loggedIn:
+                msg = "Incorrect username or password"
+                client.sendall(msg.encode(FORMAT))
+                print("Logging in failed")
+            else:
+                msg = "LOGGEDIN"
+                client.sendall(msg.encode(FORMAT))
+                print("Logging in successful") 
 
-                client_psw = client.recv(1024).decode(FORMAT)
-                client.sendall(client_psw.encode(FORMAT))
+        elif option == "SIGNUP":
+            print("Signing up")
 
-                f = open('accounts.json', 'r+')
-                file_data = json.load(f)
+            client_name = client.recv(1024).decode(FORMAT)
+            client.sendall(client_name.encode(FORMAT))
 
-                for i in file_data['username']:
-                    if i == client_name:
-                        print('Username existed')
-                        f.close()
-                        return
+            client_psw = client.recv(1024).decode(FORMAT)
+            client.sendall(client_psw.encode(FORMAT))
 
-                # Append new user's account to database
-                file_data['username'].append(client_name)
-                file_data['password'].append(client_psw)
+            f = open('accounts.json', 'r+')
+            file_data = json.load(f)
+            msg = ""
+            for i in file_data['username']:
+                if i == client_name:
+                    print('Username already exist')
+                    f.close()
+                    msg = "Username already exist"
+                    client.sendall(msg.encode(FORMAT))
+                    return
 
-                f.seek(0)
-                json.dump(file_data, f, indent=4)
+            # Append new user's account to database
+            file_data['username'].append(client_name)
+            file_data['password'].append(client_psw)
 
-                print("Create account succesfully")
-                f.close()
+            f.seek(0)
+            json.dump(file_data, f, indent=4)
 
-                print(client_name)
-                print(client_psw)
+            print("Create account succesfully")
+            f.close()
 
+            msg = "SIGNEDUP"
+            client.sendall(msg.encode(FORMAT))
 
-            
+            print(client_name)
+            print(client_psw)
+
+        
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
 

@@ -3,11 +3,6 @@ from threading import *
 from ipaddress import *
 from tkinter import *
 
-root = Tk()
-root.geometry('925x500+300+200')        #Set window size and position
-root.resizable(False, False)            #Disable X and Y resizing
-root.title('Testing')
-
 class SignIn:
     def __init__(self, frame, socket):
         self.frame = Frame(frame, width=350, height=350, bg='white')
@@ -68,7 +63,6 @@ class SignIn:
     def sign_up(self):
         self.frame.destroy()
         SignUp(root, self.socket)
-
 
 class SignUp:
     def __init__(self, frame, socket):
@@ -135,6 +129,11 @@ HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)
 FORMAT = 'utf8'
+
+root = Tk()
+root.geometry('925x500+300+200')        #Set window size and position
+root.resizable(False, False)            #Disable X and Y resizing
+root.title('Testing')
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)

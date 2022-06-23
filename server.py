@@ -88,7 +88,7 @@ def handle_client(client):  # Takes client socket as argument.
 
 
             
-    print("Disconnected")
+    print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
 
 

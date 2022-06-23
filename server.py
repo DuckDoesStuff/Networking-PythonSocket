@@ -16,7 +16,7 @@ def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
     while True:
         try:
-            option = client.recv(1024).decode('utf8')
+            option = client.recv(1024).decode(FORMAT)
         except:
             break
         if not option:
@@ -26,11 +26,11 @@ def handle_client(client):  # Takes client socket as argument.
             case "LOGIN":
                 print("Logging in")
 
-                client_name = client.recv(1024).decode('utf8')
-                client.sendall(client_name.encode('utf8'))
+                client_name = client.recv(1024).decode(FORMAT)
+                client.sendall(client_name.encode(FORMAT))
 
-                client_psw = client.recv(1024).decode('utf8')
-                client.sendall(client_psw.encode('utf8'))
+                client_psw = client.recv(1024).decode(FORMAT)
+                client.sendall(client_psw.encode(FORMAT))
 
                 print(client_name)
                 print(client_psw)
@@ -54,15 +54,15 @@ def handle_client(client):  # Takes client socket as argument.
                 
                 if not loggedIn:
                     print("Logging in failed")
-                break
+            
             case "SIGNUP":
                 print("Signing up")
 
-                client_name = client.recv(1024).decode('utf8')
-                client.sendall(client_name.encode('utf8'))
+                client_name = client.recv(1024).decode(FORMAT)
+                client.sendall(client_name.encode(FORMAT))
 
-                client_psw = client.recv(1024).decode('utf8')
-                client.sendall(client_psw.encode('utf8'))
+                client_psw = client.recv(1024).decode(FORMAT)
+                client.sendall(client_psw.encode(FORMAT))
 
                 f = open('accounts.json', 'r+')
                 file_data = json.load(f)
@@ -100,6 +100,7 @@ addresses = {}
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)
+FORMAT = 'utf8'
 
 SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)

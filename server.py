@@ -22,7 +22,7 @@ def handle_client(client):  # Takes client socket as argument.
         if not option:
             break
 
-        if option == "LOGIN":
+        if option == "SIGNIN":
             print("Logging in")
 
             client_name = client.recv(1024).decode(FORMAT)
@@ -44,11 +44,10 @@ def handle_client(client):  # Takes client socket as argument.
                 if user['username'] == client_name:
                     if user['password'] == client_psw:
                         print("Login success")
-                        client.sendall("LOGGEDIN".encode(FORMAT))
+                        client.sendall("SIGNEDIN".encode(FORMAT))
                         loggedIn = True
                     else:
                         print("Login failed")
-                        client.sendall("Incorrect username or password".encode(FORMAT))
                     break
             
             if not loggedIn:
@@ -66,23 +65,20 @@ def handle_client(client):  # Takes client socket as argument.
             f = open('accounts.json', 'r+')
             file_data = json.load(f)
 
-            existed = False
             for user in file_data:
                 if user['username'] == client_name:
                     print('Username already exist')
                     f.close()
                     client.sendall("Username already exist".encode(FORMAT))
-                    existed = True
-                    break
-            
-            if existed: return
+                    return
+
             # Append new user's account to database
-            user = {
+            info = {
                 "username" : client_name,
                 "password" : client_psw
             }
 
-            file_data.append(user)
+            file_data.append(info)
 
             f.seek(0)
             json.dump(file_data, f, indent=4)

@@ -57,7 +57,7 @@ class SignIn:
             return
         
         # Notify server client is logging in
-        option = "LOGIN"
+        option = "SIGNIN"
         self.socket.sendall(option.encode(FORMAT))
 
         # Sending client's data
@@ -71,7 +71,7 @@ class SignIn:
 
         response = self.socket.recv(1024).decode(FORMAT)
 
-        if response != "LOGGEDIN":
+        if response != "SIGNEDIN":
             announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
             announce.place(x=55, y=175)
         else:
@@ -155,6 +155,8 @@ class SignUp:
         if response != "SIGNEDUP":
             announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
             announce.place(x=80, y=175)
+        else:
+            print("Signed up success")
 
     def sign_in(self):
         self.frame.destroy()

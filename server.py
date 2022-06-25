@@ -1,3 +1,4 @@
+from logging import Logger
 from socket import *
 from threading import *
 import json
@@ -10,7 +11,6 @@ def accept_incoming_connections():
         print("%s:%s has connected." % client_address)
         addresses[client] = client_address
         Thread(target=handle_client, args=(client,)).start()
-
 
 def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
@@ -38,28 +38,21 @@ def handle_client(client):  # Takes client socket as argument.
             f = open('accounts.json', 'r')
             file_data = json.load(f)
             f.close()
-
-            j = 0
+            
             loggedIn = False
-            for i in file_data['username']:
-                if i == client_name:
-                    if file_data['password'][j] == client_psw:
-                        print("Login succesfully")
+            for user in file_data:
+                if user['username'] == client_name:
+                    if user['password'] == client_psw:
+                        print("Login success")
+                        client.sendall("LOGGEDIN".encode(FORMAT))
                         loggedIn = True
-                        break
-                    print("Wrong password")
+                    else:
+                        print("Login failed")
+                        client.sendall("Incorrect username or password".encode(FORMAT))
                     break
-                j += 1
-
-            msg = ""
+            
             if not loggedIn:
-                msg = "Incorrect username or password"
-                client.sendall(msg.encode(FORMAT))
-                print("Logging in failed")
-            else:
-                msg = "LOGGEDIN"
-                client.sendall(msg.encode(FORMAT))
-                print("Logging in successful") 
+                client.sendall("Incorrect username or password".encode(FORMAT))
 
         elif option == "SIGNUP":
             print("Signing up")
@@ -72,18 +65,24 @@ def handle_client(client):  # Takes client socket as argument.
 
             f = open('accounts.json', 'r+')
             file_data = json.load(f)
-            msg = ""
-            for i in file_data['username']:
-                if i == client_name:
+
+            existed = False
+            for user in file_data:
+                if user['username'] == client_name:
                     print('Username already exist')
                     f.close()
-                    msg = "Username already exist"
-                    client.sendall(msg.encode(FORMAT))
-                    return
-
+                    client.sendall("Username already exist".encode(FORMAT))
+                    existed = True
+                    break
+            
+            if existed: return
             # Append new user's account to database
-            file_data['username'].append(client_name)
-            file_data['password'].append(client_psw)
+            user = {
+                "username" : client_name,
+                "password" : client_psw
+            }
+
+            file_data.append(user)
 
             f.seek(0)
             json.dump(file_data, f, indent=4)
@@ -91,8 +90,7 @@ def handle_client(client):  # Takes client socket as argument.
             print("Create account succesfully")
             f.close()
 
-            msg = "SIGNEDUP"
-            client.sendall(msg.encode(FORMAT))
+            client.sendall("SIGNEDUP".encode(FORMAT))
 
             print(client_name)
             print(client_psw)
@@ -100,9 +98,6 @@ def handle_client(client):  # Takes client socket as argument.
         
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
-
-
-
         
 clients = {}
 addresses = {}

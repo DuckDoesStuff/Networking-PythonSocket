@@ -21,7 +21,7 @@ def handle_client(client):  # Takes client socket as argument.
             break
         if not option:
             break
-
+        print(option)
         if option == "SIGNIN":
             print("Logging in")
 
@@ -62,34 +62,37 @@ def handle_client(client):  # Takes client socket as argument.
             client_psw = client.recv(1024).decode(FORMAT)
             client.sendall(client_psw.encode(FORMAT))
 
+            print(client_name)
+            print(client_psw)
+
             f = open('accounts.json', 'r+')
             file_data = json.load(f)
-
+            
+            existed = False
             for user in file_data:
                 if user['username'] == client_name:
                     print('Username already exist')
                     f.close()
                     client.sendall("Username already exist".encode(FORMAT))
-                    return
+                    existed = True
+                    break
+            
+            if not existed:
+                # Append new user's account to database
+                info = {
+                    "username" : client_name,
+                    "password" : client_psw
+                }
 
-            # Append new user's account to database
-            info = {
-                "username" : client_name,
-                "password" : client_psw
-            }
+                file_data.append(info)
 
-            file_data.append(info)
+                f.seek(0)
+                json.dump(file_data, f, indent=4)
 
-            f.seek(0)
-            json.dump(file_data, f, indent=4)
+                print("Create account succesfully")
+                f.close()
 
-            print("Create account succesfully")
-            f.close()
-
-            client.sendall("SIGNEDUP".encode(FORMAT))
-
-            print(client_name)
-            print(client_psw)
+                client.sendall("SIGNEDUP".encode(FORMAT))
 
         
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")

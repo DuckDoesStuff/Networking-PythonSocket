@@ -143,7 +143,7 @@ class SignUp:
 
         # Sending client's data
         self.socket.sendall(self.name.encode(FORMAT))
-        self.socket.recv(1024)
+        self.socket.recv(1024)#? couldn't receive anything
 
         self.socket.sendall(self.psw.encode(FORMAT))
         self.socket.recv(1024)

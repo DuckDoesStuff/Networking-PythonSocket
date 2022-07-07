@@ -111,29 +111,31 @@ def handle_client(client):  # Takes client socket as argument.
             cwd = os.getcwd()
             print(cwd)
 
-            dwld_path = "C:/Users/Admin/Desktop/Downloads"
-            if not os.path.exists(dwld_path):
-                os.mkdir(dwld_path)
-                os.chdir(dwld_path)
-            else: os.chdir(dwld_path)
+            upld_path = "./storage/" + client_name
+            if not os.path.exists(upld_path):
+                os.mkdir(upld_path)
+                os.chdir(upld_path)
+            else: os.chdir(upld_path)
 
             print(os.getcwd())
 
             file = open(filename, "wb")
             data = client.recv(2048)
-            while data:
+            client.sendall(data)
+            running = True
+            while running:
                 file.write(data)
                 try:
                     data = client.recv(2048)
-                    if data.decode(FORMAT) == "DONE":
-                        break
+                    client.sendall(data)
+                    if data.decode(FORMAT) == "DONE" or not data:
+                        running = False
                 except UnicodeDecodeError:
                     pass
             file.close()
-
-            os.chdir(cwd)
-            
+            os.chdir(cwd)    
             print(filename)
+            print("Receiving completed")
 
         
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")

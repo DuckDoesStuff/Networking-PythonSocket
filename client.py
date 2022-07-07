@@ -206,8 +206,10 @@ class MainHome:
             data = file.read(2048)
             while data:
                 self.socket.sendall(data)
+                self.socket.recv(2048)
                 data = file.read(2048)
             self.socket.sendall("DONE".encode(FORMAT))
+            print("Upload completed")
             file.close()
 
 

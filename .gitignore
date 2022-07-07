@@ -1,0 +1,6 @@
+FileHandling/downloadFile.txt
+FileHandling/receivedFile.txt
+FileHandling/sendFile.txt
+FileHandling/client.py
+FileHandling/server.py
+img.png

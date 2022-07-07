@@ -1,0 +1,12 @@
+[
+    {
+        "ID": "1",
+        "Type": "pdf",
+        "Content": "."
+    },
+    {
+        "ID": "2",
+        "Type": "txt",
+        "Content": "."
+    }
+]

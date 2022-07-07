@@ -2,6 +2,7 @@ from socket import *
 from threading import *
 from ipaddress import *
 from tkinter import *
+from tkinter import filedialog
 from PIL import Image, ImageTk
 
 class SignIn:
@@ -59,6 +60,7 @@ class SignIn:
         # Notify server client is logging in
         option = "SIGNIN"
         self.socket.sendall(option.encode(FORMAT))
+        self.socket.recv(1024)
 
         # Sending client's data
         self.socket.sendall(self.name.encode(FORMAT))
@@ -70,6 +72,7 @@ class SignIn:
         print("Sign in data sent")
 
         response = self.socket.recv(1024).decode(FORMAT)
+        self.socket.sendall(response.encode(FORMAT))
 
         if response != "SIGNEDIN":
             announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
@@ -140,10 +143,11 @@ class SignUp:
         # Notify server client is signing up
         option = "SIGNUP"
         self.socket.sendall(option.encode(FORMAT))
+        self.socket.recv(1024)
 
         # Sending client's data
         self.socket.sendall(self.name.encode(FORMAT))
-        self.socket.recv(1024)#? couldn't receive anything
+        self.socket.recv(1024)
 
         self.socket.sendall(self.psw.encode(FORMAT))
         self.socket.recv(1024)
@@ -151,6 +155,7 @@ class SignUp:
         print("Sign up data sent")
 
         response = self.socket.recv(1024).decode(FORMAT)
+        self.socket.sendall(response.encode(FORMAT))
 
         if response != "SIGNEDUP":
             announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
@@ -165,8 +170,47 @@ class SignUp:
 class MainHome:
     def __init__(self, frame, socket):
         self.socket = socket
-        self.frame = Frame(frame, width=925, height=500, bg='red')
+        self.frame = Frame(frame, width=925, height=500)
+        self.frame.pack()
         self.frame.place(x=0, y=0)
+
+        self.browse_file = Button(self.frame, width=10, text="Browse files", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_file)
+        self.browse_file.place(x=0, y=100)
+
+        # img = ImageTk.PhotoImage(file="img.png")
+        # self.img = Label(self.frame, image = img, bg='white')
+        # self.img.place(x=30, y=100)
+
+    def browse_file(self):
+        self.filepath = filedialog.askopenfilename(initialdir = "/", 
+                title = "Select a File")
+
+        file_open = Label(self.frame, text = self.filepath, fg='#06283D',
+                                bg='white', font=('Roboto', 19, 'bold'))
+        file_open.place(x=0, y=0)
+
+        upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
+        upload.place(x=0, y=150)
+    def upload_file(self):
+        if self.filepath:# will not execute if no file is opened
+            self.socket.sendall("UPLOAD".encode(FORMAT))
+            self.socket.recv(1024)
+            
+            self.socket.sendall(self.filepath.encode(FORMAT))
+            self.socket.recv(1024)
+            print("Uploading file")
+
+            file = open(self.filepath, "rb")
+            data = file.read(2048)
+            while data:
+                self.socket.sendall(data)
+                data = file.read(2048)
+            self.socket.sendall("DONE".encode(FORMAT))
+            file.close()
+
+
 
 HOST = '127.0.0.1'
 PORT = 33000

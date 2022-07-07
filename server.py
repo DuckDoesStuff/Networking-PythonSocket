@@ -1,7 +1,7 @@
-from logging import Logger
 from socket import *
 from threading import *
 import json
+import os
 
 
 def accept_incoming_connections():
@@ -24,6 +24,7 @@ def handle_client(client):  # Takes client socket as argument.
         print(option)
         if option == "SIGNIN":
             print("Logging in")
+            client.sendall(option.encode(FORMAT))
 
             client_name = client.recv(1024).decode(FORMAT)
             client.sendall(client_name.encode(FORMAT))
@@ -52,9 +53,11 @@ def handle_client(client):  # Takes client socket as argument.
             
             if not loggedIn:
                 client.sendall("Incorrect username or password".encode(FORMAT))
+            client.recv(1024)
 
         elif option == "SIGNUP":
             print("Signing up")
+            client.sendall(option.encode(FORMAT))
 
             client_name = client.recv(1024).decode(FORMAT)
             client.sendall(client_name.encode(FORMAT))
@@ -77,6 +80,7 @@ def handle_client(client):  # Takes client socket as argument.
                     existed = True
                     break
             
+            
             if not existed:
                 # Append new user's account to database
                 info = {
@@ -93,6 +97,43 @@ def handle_client(client):  # Takes client socket as argument.
                 f.close()
 
                 client.sendall("SIGNEDUP".encode(FORMAT))
+            client.recv(1024)
+
+        elif option == "UPLOAD":
+            client.sendall(option.encode(FORMAT))
+
+            filepath = client.recv(1024).decode(FORMAT)
+            client.sendall(filepath.encode(FORMAT))
+
+            os.path.split(filepath)
+            filename = os.path.split(filepath)[1]
+
+            cwd = os.getcwd()
+            print(cwd)
+
+            dwld_path = "C:/Users/Admin/Desktop/Downloads"
+            if not os.path.exists(dwld_path):
+                os.mkdir(dwld_path)
+                os.chdir(dwld_path)
+            else: os.chdir(dwld_path)
+
+            print(os.getcwd())
+
+            file = open(filename, "wb")
+            data = client.recv(2048)
+            while data:
+                file.write(data)
+                try:
+                    data = client.recv(2048)
+                    if data.decode(FORMAT) == "DONE":
+                        break
+                except UnicodeDecodeError:
+                    pass
+            file.close()
+
+            os.chdir(cwd)
+            
+            print(filename)
 
         
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")

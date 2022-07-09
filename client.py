@@ -7,46 +7,39 @@ from PIL import Image, ImageTk
 class SignIn:
     def __init__(self, frame, socket):
         self.socket = socket
-        self.frame = Frame(frame, width=350, height=350, bg='white')
-        self.frame.place(x=0, y=0)
 
-        # Header title
-        self.heading = Label(self.frame, text='Sign in', fg='#06283D',
-                                bg='white', font=('Roboto', 19, 'bold'))
-        self.heading.place(x=130, y=5)
-
-
-        # Username input box
-        self.username = Label(self.frame,text="Username", bg='white', font=('Roboto', 13))
-        self.username.place(x=25, y=60)
+        self.bg = PhotoImage(file = './images/signin.png')
+        self.my_label = Label(root,image=self.bg)
+        self.my_label.image = self.bg
+        self.my_label.pack(fill='both', expand='yes')
+        self.my_label.place(x=-2,y=-2)
         
-        self.user = Entry(self.frame, width=33, fg='black', bg='#1363DF', bd=0,
+        self.frame = Frame(frame, width=350, height=350)
+        self.frame.place(x=100, y=50)
+
+        self.bg = PhotoImage(file = './images/signin.png')
+        self.my_label = Label(self.frame,image=self.bg)
+        self.my_label.image = self.bg
+        self.my_label.pack(fill='both', expand='yes')
+        self.my_label.place(x=-102,y=-52)
+        
+        self.user = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.user.place(x=25, y=90)
+        self.user.place(x=121, y=139)
 
-
-        # Password input box
-        self.password = Label(self.frame,text="Password", bg='white', font=('Roboto', 13))
-        self.password.place(x=25, y=130)
-
-        self.pswd = Entry(self.frame, width=33, fg='black', bg='#1363DF', bd=0,
+        self.pswd = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.pswd.place(x=25, y=150)
+        self.pswd.place(x=121, y=194)
 
 
         # Signin button
-        self.btn = Button(self.frame, width=10, text="Sign in", activebackground='red', 
-                        font=('Roboto', 11), bd=0, command=self.sign_in, bg='black', fg='white')
-        self.btn.place(x=138, y=270)
+        self.btn = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.sign_in, bg='#009156', fg='white')
+        self.btn.place(x=145, y=260)
 
-
-        # Need an account?
-        Label(self.frame, text="Don't have an account?", 
-            bg='white', font=('Roboto', 11)).place(x=105, y=295)
-
-        self.sgup = Button(self.frame, width=10, text="Sign up", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.sign_up)
-        self.sgup.place(x=138, y=320)
+        self.sgup = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.sign_up)
+        self.sgup.place(x=145, y=310)
     
     def sign_in(self):
         self.name = self.user.get()
@@ -85,46 +78,39 @@ class SignIn:
 class SignUp:
     def __init__(self, frame, socket):
         self.socket = socket
-        self.frame = Frame(frame, width=350, height=350, bg='white')
-        self.frame.place(x=0, y=0)
 
-        # Header title
-        self.heading = Label(self.frame, text='Sign up', fg='#06283D',
-                                bg='white', font=('Roboto', 19, 'bold'))
-        self.heading.place(x=130, y=5)
-
-
-        # Username input box
-        self.username = Label(self.frame,text="Username", bg='white', font=('Roboto', 13))
-        self.username.place(x=25, y=60)
+        self.bg = PhotoImage(file = './images/signup.png')
+        self.my_label = Label(root,image=self.bg)
+        self.my_label.image = self.bg
+        self.my_label.pack(fill='both', expand='yes')
+        self.my_label.place(x=-2,y=-2)
         
-        self.user = Entry(self.frame, width=33, fg='black', bg='#1363DF', bd=0,
+        self.frame = Frame(frame, width=350, height=350)
+        self.frame.place(x=100, y=50)
+
+        self.bg = PhotoImage(file = './images/signup.png')
+        self.my_label = Label(self.frame,image=self.bg)
+        self.my_label.image = self.bg
+        self.my_label.pack(fill='both', expand='yes')
+        self.my_label.place(x=-102,y=-52)
+        
+        self.user = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.user.place(x=25, y=90)
+        self.user.place(x=121, y=139)
 
-
-        # Password input box
-        self.password = Label(self.frame,text="Password", bg='white', font=('Roboto', 13))
-        self.password.place(x=25, y=130)
-
-        self.pswd = Entry(self.frame, width=33, fg='black', bg='#1363DF', bd=0,
+        self.pswd = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.pswd.place(x=25, y=150)
+        self.pswd.place(x=121, y=194)
 
 
         # Signup button
-        self.btn = Button(self.frame, width=10, text="Sign up", activebackground='red', 
-                        font=('Roboto', 11), bd=0, command=self.sign_up, bg='black', fg='white')
-        self.btn.place(x=138, y=270)
+        self.btn = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.sign_up, bg='#009156', fg='white')
+        self.btn.place(x=145, y=260)
 
-
-        # Already have an accout?
-        Label(self.frame, text="Already have an account?", 
-            bg='white', font=('Roboto', 11)).place(x=100, y=295)
-
-        self.sgin = Button(self.frame, width=10, text="Sign in", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.sign_in)
-        self.sgin.place(x=138, y=320)
+        self.sgin = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.sign_in)
+        self.sgin.place(x=145, y=310)
     
     def sign_up(self):
         self.name = self.user.get()
@@ -143,7 +129,7 @@ class SignUp:
 
         # Sending client's data
         self.socket.sendall(self.name.encode(FORMAT))
-        self.socket.recv(1024)
+        self.socket.recv(1024)#? couldn't receive anything
 
         self.socket.sendall(self.psw.encode(FORMAT))
         self.socket.recv(1024)

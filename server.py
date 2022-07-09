@@ -1,8 +1,79 @@
+from math import ceil
 from socket import *
 from threading import *
 import json
 import os
 
+def check(username, password):
+    if len(username) < 5:
+        return -1
+    if len(password) < 3:
+        return -2
+    return 1
+
+def new_file(client, client_name):
+    filepath = client.recv(1024).decode(FORMAT)
+    client.sendall(filepath.encode(FORMAT))
+
+    os.path.split(filepath)
+    filename = os.path.split(filepath)[1]
+
+    cwd = os.getcwd()
+
+    upld_path = "./storage/" + client_name
+    if not os.path.exists(upld_path):
+        os.mkdir(upld_path)
+        os.chdir(upld_path)
+    else: os.chdir(upld_path)
+
+    file = open(filename, "wb")
+    data = client.recv(2048)
+    client.sendall(data)
+    running = True
+    while running:
+        file.write(data)
+        try:
+            data = client.recv(2048)
+            client.sendall(data)
+            if data.decode(FORMAT) == "DONE" or not data:
+                running = False
+        except UnicodeDecodeError:
+            pass
+    file.close()
+    os.chdir(cwd)
+    
+    print(filename)
+    print("Receiving completed")
+    return
+
+def new_note(client, client_name):
+    note_file = open("./storage/" + client_name + "/note.json", "r+")
+    note_data = json.load(note_file)
+
+    msg = client.recv(1024).decode(FORMAT)
+    client.sendall(msg.encode(FORMAT))
+    if msg == "CANCEL":
+        note_file.close()
+        return
+    
+    topic = client.recv(2048).decode(FORMAT)
+    client.sendall(topic.encode(FORMAT))
+
+    content = client.recv(2048).decode(FORMAT)
+    client.sendall(content.encode(FORMAT))
+
+    take_note = {
+        "ID" : len(note_data) + 1,
+        "Topic" : topic,
+        "Content" : content
+    }
+
+    note_data.append(take_note)
+
+    note_file.seek(0)
+    json.dump(note_data, note_file, indent=4)    
+
+    note_file.close()
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
@@ -68,20 +139,20 @@ def handle_client(client):  # Takes client socket as argument.
             print(client_name)
             print(client_psw)
 
+
             f = open('accounts.json', 'r+')
             file_data = json.load(f)
             
-            existed = False
-            for user in file_data:
-                if user['username'] == client_name:
-                    print('Username already exist')
-                    f.close()
-                    client.sendall("Username already exist".encode(FORMAT))
-                    existed = True
-                    break
+            checkValid = check(client_name, client_psw)
+            if checkValid == 1:
+                for user in file_data:
+                    if user['username'] == client_name:
+                        print('Username already exist')
+                        f.close()
+                        checkValid = -3
+                        break
             
-            
-            if not existed:
+            if checkValid == 1:
                 # Append new user's account to database
                 info = {
                     "username" : client_name,
@@ -93,54 +164,39 @@ def handle_client(client):  # Takes client socket as argument.
                 f.seek(0)
                 json.dump(file_data, f, indent=4)
 
+                newfolder = "./storage/" + client_name
+                os.mkdir(newfolder)
+                init_list = []
+                file = open("./storage/" + client_name + "/note.json", "w")
+                file.write(json.dumps(init_list, indent=4))
+                file.close()
+
+                init_list = []
+                file = open("./storage/" + client_name + "/directory.json", "w")
+                file.write(json.dumps(init_list, indent=4))
+                file.close()
+
+
                 print("Create account succesfully")
                 f.close()
 
-                client.sendall("SIGNEDUP".encode(FORMAT))
+                client.sendall(str(checkValid).encode(FORMAT))
+            else:
+                client.sendall(str(checkValid).encode(FORMAT))
             client.recv(1024)
 
         elif option == "UPLOAD":
             client.sendall(option.encode(FORMAT))
-
-            filepath = client.recv(1024).decode(FORMAT)
-            client.sendall(filepath.encode(FORMAT))
-
-            os.path.split(filepath)
-            filename = os.path.split(filepath)[1]
-
-            cwd = os.getcwd()
-            print(cwd)
-
-            upld_path = "./storage/" + client_name
-            if not os.path.exists(upld_path):
-                os.mkdir(upld_path)
-                os.chdir(upld_path)
-            else: os.chdir(upld_path)
-
-            print(os.getcwd())
-
-            file = open(filename, "wb")
-            data = client.recv(2048)
-            client.sendall(data)
-            running = True
-            while running:
-                file.write(data)
-                try:
-                    data = client.recv(2048)
-                    client.sendall(data)
-                    if data.decode(FORMAT) == "DONE" or not data:
-                        running = False
-                except UnicodeDecodeError:
-                    pass
-            file.close()
-            os.chdir(cwd)    
-            print(filename)
-            print("Receiving completed")
-
+            new_file(client, client_name)
         
+        elif option == "ADD_NOTE":
+            client.sendall(option.encode(FORMAT))
+            new_note(client, client_name)
+
+                
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
-        
+       
 clients = {}
 addresses = {}
 

@@ -3,6 +3,7 @@ from threading import *
 from ipaddress import *
 from tkinter import *
 from tkinter import filedialog
+import tkinter
 from PIL import Image, ImageTk
 
 class SignIn:
@@ -143,15 +144,67 @@ class SignUp:
         response = self.socket.recv(1024).decode(FORMAT)
         self.socket.sendall(response.encode(FORMAT))
 
-        if response != "SIGNEDUP":
-            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
-            announce.place(x=80, y=175)
-        else:
-            print("Signed up success")
+        if response == "1":
+            tkinter.messagebox.showinfo("Announcement", "Sign up successful please return to login page")
+        elif response == "-1":
+            tkinter.messagebox.showinfo("Announcement", "Invalid username")
+        elif response == "-2":
+            tkinter.messagebox.showinfo("Announcement", "Invalid password")
+        elif response == "-3":
+            tkinter.messagebox.showinfo("Announcement", "Username already exist")
 
     def sign_in(self):
         self.frame.destroy()
         SignIn(root, self.socket)
+
+class NoteApp:
+    def __init__(self, socket):
+        self.root = Tk()
+        self.root.geometry("750x250")
+        self.root.title("New note")
+
+        self.socket = socket
+        self.frame = Frame(self.root, width=750, height=250)
+        self.frame.pack()
+        self.frame.place(x=0, y=0)
+
+        self.topicEnt = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
+                            font=('Roboto', 13))
+        self.topicEnt.place(x=0, y=0)
+
+        self.contentEnt = Entry(self.frame, width=30, fg='black', bg='#f9f9f9', bd=0,
+                            font=('Roboto', 13))
+        self.contentEnt.place(x=0, y=50)
+
+        newNote = Button(self.frame, width=10, text="New note", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.new_note, bg='#009156', fg='white')
+        newNote.place(x=0, y=100)
+
+        cancel = Button(self.frame, width=10, text="Cancel", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.cancel, bg='#009156', fg='white')
+        cancel.place(x=0, y=150)
+
+        self.root.mainloop()
+    def new_note(self):
+        self.socket.sendall("ADD_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        topic = self.topicEnt.get()
+        content = self.contentEnt.get()
+        self.socket.sendall(topic.encode(FORMAT))
+        self.socket.recv(2048)
+
+        self.socket.sendall(content.encode(FORMAT))
+        self.socket.recv(2048)
+
+        self.root.destroy()
+    def cancel(self):
+        self.socket.sendall("CANCEL".encode(FORMAT))
+        self.socket.recv(1024)
+
+        self.root.destroy()
+        
+
 
 class MainHome:
     def __init__(self, frame, socket):
@@ -160,15 +213,15 @@ class MainHome:
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
-        self.browse_file = Button(self.frame, width=10, text="Browse files", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_file)
-        self.browse_file.place(x=0, y=100)
+        self.new_file = Button(self.frame, width=10, text="Browse files", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_file)
+        self.new_file.place(x=0, y=100)
 
-        # img = ImageTk.PhotoImage(file="img.png")
-        # self.img = Label(self.frame, image = img, bg='white')
-        # self.img.place(x=30, y=100)
+        self.add_note = Button(self.frame, width=10, text="New note", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_note)
+        self.add_note.place(x=0, y=200)
 
-    def browse_file(self):
+    def new_file(self):
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
                 title = "Select a File")
 
@@ -176,10 +229,10 @@ class MainHome:
                                 bg='white', font=('Roboto', 19, 'bold'))
         file_open.place(x=0, y=0)
 
-        upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
+        upload = Button(self.frame, width=10, text="New file", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
         upload.place(x=0, y=150)
-    def upload_file(self):
+    def uploadFile(self):
         if self.filepath:# will not execute if no file is opened
             self.socket.sendall("UPLOAD".encode(FORMAT))
             self.socket.recv(1024)
@@ -197,6 +250,12 @@ class MainHome:
             self.socket.sendall("DONE".encode(FORMAT))
             print("Upload completed")
             file.close()
+    
+    def new_note(self):
+        self.socket.sendall("ADD_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        NoteApp(self.socket)
 
 
 

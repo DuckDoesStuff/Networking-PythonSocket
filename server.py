@@ -23,8 +23,7 @@ def new_file(client, client_name):
     upld_path = "./storage/" + client_name
     if not os.path.exists(upld_path):
         os.mkdir(upld_path)
-        os.chdir(upld_path)
-    else: os.chdir(upld_path)
+    os.chdir(upld_path)
 
     file = open(filename, "wb")
     data = client.recv(2048)
@@ -37,7 +36,7 @@ def new_file(client, client_name):
             client.sendall(data)
             if data.decode(FORMAT) == "DONE" or not data:
                 running = False
-        except UnicodeDecodeError:
+        except:
             pass
     file.close()
     os.chdir(cwd)

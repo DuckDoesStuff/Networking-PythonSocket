@@ -1,3 +1,4 @@
+import os
 from socket import *
 from threading import *
 from ipaddress import *
@@ -236,17 +237,19 @@ class MainHome:
             self.socket.sendall("UPLOAD".encode(FORMAT))
             self.socket.recv(1024)
             
-            self.socket.sendall(self.filepath.encode(FORMAT))
-            self.socket.recv(1024)
+            filesize = os.path.getsize(self.filepath)
+            info = f"{self.filepath}{SEPARATOR}{filesize}"
+            self.socket.sendall(info.encode(FORMAT))
+
             print("Uploading file")
 
             file = open(self.filepath, "rb")
-            data = file.read(BUFFER_SIZE)
-            while data:
-                self.socket.sendall(data)
-                self.socket.recv(BUFFER_SIZE)
+            while True:
                 data = file.read(BUFFER_SIZE)
-            self.socket.sendall("DONE".encode(FORMAT))
+                if not data:
+                    break
+                self.socket.sendall(data)
+                
             print("Upload completed")
             file.close()
     
@@ -256,7 +259,7 @@ class MainHome:
 
         NoteApp(self.socket)
 
-
+SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000

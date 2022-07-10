@@ -12,11 +12,13 @@ def check(username, password):
     return 1
 
 def new_file(client, client_name):
-    filepath = client.recv(1024).decode(FORMAT)
-    client.sendall(filepath.encode(FORMAT))
+    info = client.recv(1024).decode(FORMAT).split(SEPARATOR)
+    filepath = info[0]
+    filesize = int(info[1])
 
-    os.path.split(filepath)
-    filename = os.path.split(filepath)[1]
+    filename = os.path.basename(filepath)
+    print(filename)
+    print(filepath)
 
     cwd = os.getcwd()
 
@@ -26,18 +28,13 @@ def new_file(client, client_name):
     os.chdir(upld_path)
 
     file = open(filename, "wb")
-    data = client.recv(BUFFER_SIZE)
-    client.sendall(data)
-    running = True
-    while running:
+    recved = 0
+    while True:
+        data = client.recv(BUFFER_SIZE)
+        recved += len(data)
+        if recved >= filesize:
+            break
         file.write(data)
-        try:
-            data = client.recv(BUFFER_SIZE)
-            client.sendall(data)
-            if not data or data.decode(FORMAT) == "DONE":
-                running = False
-        except UnicodeDecodeError:
-            pass
     file.close()
     os.chdir(cwd)
     
@@ -198,6 +195,7 @@ def handle_client(client):  # Takes client socket as argument.
 clients = {}
 addresses = {}
 
+SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000

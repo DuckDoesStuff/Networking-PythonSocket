@@ -63,9 +63,9 @@ def new_note(client, client_name):
     client.sendall(content.encode(FORMAT))
 
     take_note = {
-        "ID" : len(note_data) + 1,
-        "Topic" : topic,
-        "Content" : content
+        "id" : len(note_data) + 1,
+        "topic" : topic,
+        "content" : content
     }
 
     note_data.append(take_note)
@@ -94,7 +94,7 @@ def handle_client(client):  # Takes client socket as argument.
             break
         print(option)
         if option == "SIGNIN":
-            print("Logging in")
+            print("Signing in")
             client.sendall(option.encode(FORMAT))
 
             client_name = client.recv(1024).decode(FORMAT)
@@ -106,23 +106,22 @@ def handle_client(client):  # Takes client socket as argument.
             print(client_name)
             print(client_psw)
 
-            #Open and store loaded data as a python object
             f = open('accounts.json', 'r')
-            file_data = json.load(f)
+            acc_data = json.load(f)
             f.close()
             
-            loggedIn = False
-            for user in file_data:
+            signedIn = False
+            for user in acc_data:
                 if user['username'] == client_name:
                     if user['password'] == client_psw:
-                        print("Login success")
+                        print("Sign success")
                         client.sendall("SIGNEDIN".encode(FORMAT))
-                        loggedIn = True
+                        signedIn = True
                     else:
-                        print("Login failed")
+                        print("Signin failed")
                     break
             
-            if not loggedIn:
+            if not signedIn:
                 client.sendall("Incorrect username or password".encode(FORMAT))
             client.recv(1024)
 
@@ -141,11 +140,11 @@ def handle_client(client):  # Takes client socket as argument.
 
 
             f = open('accounts.json', 'r+')
-            file_data = json.load(f)
+            acc_data = json.load(f)
             
             checkValid = check(client_name, client_psw)
             if checkValid == 1:
-                for user in file_data:
+                for user in acc_data:
                     if user['username'] == client_name:
                         print('Username already exist')
                         f.close()
@@ -159,11 +158,13 @@ def handle_client(client):  # Takes client socket as argument.
                     "password" : client_psw
                 }
 
-                file_data.append(info)
+                acc_data.append(info)
 
                 f.seek(0)
-                json.dump(file_data, f, indent=4)
+                json.dump(acc_data, f, indent=4)
+                f.close()
 
+                # Init user's folders
                 newfolder = "./storage/" + client_name
                 os.mkdir(newfolder)
                 init_list = []
@@ -176,9 +177,7 @@ def handle_client(client):  # Takes client socket as argument.
                 file.write(json.dumps(init_list, indent=4))
                 file.close()
 
-
                 print("Create account succesfully")
-                f.close()
 
                 client.sendall(str(checkValid).encode(FORMAT))
             else:

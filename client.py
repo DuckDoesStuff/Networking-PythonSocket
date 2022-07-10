@@ -205,7 +205,6 @@ class NoteApp:
         self.root.destroy()
         
 
-
 class MainHome:
     def __init__(self, frame, socket):
         self.socket = socket

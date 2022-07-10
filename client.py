@@ -164,25 +164,36 @@ class MainHome:
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_file)
         self.browse_file.place(x=0, y=100)
 
-        # img = ImageTk.PhotoImage(file="img.png")
-        # self.img = Label(self.frame, image = img, bg='white')
-        # self.img.place(x=30, y=100)
+        self.browse_img = Button(self.frame, width=10, text="Browse images", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_img)
+        self.browse_img.place(x=0, y=150)
 
     def browse_file(self):
+        self.upld_img = False
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
-                title = "Select a File")
-
-        file_open = Label(self.frame, text = self.filepath, fg='#06283D',
-                                bg='white', font=('Roboto', 19, 'bold'))
-        file_open.place(x=0, y=0)
+                title = "Select a File", filetypes=[("Text files", ".txt")])
 
         upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
-        upload.place(x=0, y=150)
+        upload.place(x=0, y=200)
+    def browse_img(self):
+        self.upld_img = True
+        self.filepath = filedialog.askopenfilename(initialdir = "/", 
+                title = "Select a File", filetypes=[("Image files", ".jpg .png")])
+
+        upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
+        upload.place(x=0, y=200)
     def upload_file(self):
         if self.filepath:# will not execute if no file is opened
             self.socket.sendall("UPLOAD".encode(FORMAT))
             self.socket.recv(1024)
+
+            # if self.upld_img:
+            #     self.socket.sendall("IMAGE".encode(FORMAT))
+            # else:
+            #     self.socket.sendall("TEXT".encode(FORMAT))
+            # self.socket.recv(1024)
             
             self.socket.sendall(self.filepath.encode(FORMAT))
             self.socket.recv(1024)
@@ -197,6 +208,7 @@ class MainHome:
             self.socket.sendall("DONE".encode(FORMAT))
             print("Upload completed")
             file.close()
+            self.filepath = ""
 
 
 

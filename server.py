@@ -93,6 +93,29 @@ def handle_client(client):  # Takes client socket as argument.
                 f.seek(0)
                 json.dump(file_data, f, indent=4)
 
+                newfolder = "./storage/" + client_name
+                os.mkdir(newfolder)
+                file = open("./storage/" + client_name + "/note.json", "w")
+                temp_dict = [
+                ]
+                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
+                file.write(temp_string)
+                file.close()
+                
+                file = open("./storage/" + client_name + "/file.json", "w")
+                temp_dict = [
+                ]
+                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
+                file.write(temp_string)
+                file.close()
+
+                file = open("./storage/" + client_name + "/image.json", "w")
+                temp_dict = [
+                ]
+                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
+                file.write(temp_string)
+                file.close()
+
                 print("Create account succesfully")
                 f.close()
 
@@ -101,6 +124,9 @@ def handle_client(client):  # Takes client socket as argument.
 
         elif option == "UPLOAD":
             client.sendall(option.encode(FORMAT))
+
+            file_type = client.recv(1024).decode(FORMAT)
+            client.sendall(file_type.encode(FORMAT))
 
             filepath = client.recv(1024).decode(FORMAT)
             client.sendall(filepath.encode(FORMAT))
@@ -114,8 +140,7 @@ def handle_client(client):  # Takes client socket as argument.
             upld_path = "./storage/" + client_name
             if not os.path.exists(upld_path):
                 os.mkdir(upld_path)
-                os.chdir(upld_path)
-            else: os.chdir(upld_path)
+            os.chdir(upld_path)
 
             print(os.getcwd())
 
@@ -136,6 +161,23 @@ def handle_client(client):  # Takes client socket as argument.
             os.chdir(cwd)    
             print(filename)
             print("Receiving completed")
+            
+            # if file_type == "IMAGE":
+            #     namestore = upld_path + '/image.json'
+            # else: 
+            namestore = upld_path + '/file.json'
+            storage = open(namestore, 'r+')
+            file_data = json.load(storage)
+
+            info = {
+                "ID" : filename
+            }
+            
+            file_data.append(info)
+
+            storage.seek(0)
+            json.dump(file_data, storage, indent=4)
+            storage.close()
 
         
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")

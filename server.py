@@ -40,7 +40,6 @@ def new_file(client, client_name):
     
     print(filename)
     print("Receiving completed")
-    return
 
 def new_note(client, client_name):
     note_file = open("./storage/" + client_name + "/note.json", "r+")

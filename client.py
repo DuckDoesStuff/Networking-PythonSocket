@@ -169,11 +169,13 @@ class NoteApp:
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
+        # Topic entry box
         self.topicEnt = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
         self.topicEnt.place(x=0, y=0)
 
-        self.contentEnt = Entry(self.frame, width=30, fg='black', bg='#f9f9f9', bd=0,
+        # Content text box
+        self.contentEnt = Text(self.frame, width=30, height=20, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
         self.contentEnt.place(x=0, y=50)
 
@@ -181,6 +183,7 @@ class NoteApp:
                         font=('Roboto', 11), bd=0, command=self.new_note, bg='#009156', fg='white')
         newNote.place(x=0, y=100)
 
+        # Cancel button
         cancel = Button(self.frame, width=10, text="Cancel", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, command=self.cancel, bg='#009156', fg='white')
         cancel.place(x=0, y=150)
@@ -191,7 +194,7 @@ class NoteApp:
         self.socket.recv(1024)
 
         topic = self.topicEnt.get()
-        content = self.contentEnt.get()
+        content = self.contentEnt.get(1.0, END)
         self.socket.sendall(topic.encode(FORMAT))
         self.socket.recv(BUFFER_SIZE)
 

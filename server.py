@@ -26,17 +26,17 @@ def new_file(client, client_name):
     os.chdir(upld_path)
 
     file = open(filename, "wb")
-    data = client.recv(2048)
+    data = client.recv(BUFFER_SIZE)
     client.sendall(data)
     running = True
     while running:
         file.write(data)
         try:
-            data = client.recv(2048)
+            data = client.recv(BUFFER_SIZE)
             client.sendall(data)
-            if data.decode(FORMAT) == "DONE" or not data:
+            if not data or data.decode(FORMAT) == "DONE":
                 running = False
-        except:
+        except UnicodeDecodeError:
             pass
     file.close()
     os.chdir(cwd)
@@ -55,10 +55,10 @@ def new_note(client, client_name):
         note_file.close()
         return
     
-    topic = client.recv(2048).decode(FORMAT)
+    topic = client.recv(BUFFER_SIZE).decode(FORMAT)
     client.sendall(topic.encode(FORMAT))
 
-    content = client.recv(2048).decode(FORMAT)
+    content = client.recv(BUFFER_SIZE).decode(FORMAT)
     client.sendall(content.encode(FORMAT))
 
     take_note = {
@@ -198,6 +198,7 @@ def handle_client(client):  # Takes client socket as argument.
 clients = {}
 addresses = {}
 
+BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

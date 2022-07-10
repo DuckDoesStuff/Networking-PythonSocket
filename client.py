@@ -192,10 +192,10 @@ class NoteApp:
         topic = self.topicEnt.get()
         content = self.contentEnt.get()
         self.socket.sendall(topic.encode(FORMAT))
-        self.socket.recv(2048)
+        self.socket.recv(BUFFER_SIZE)
 
         self.socket.sendall(content.encode(FORMAT))
-        self.socket.recv(2048)
+        self.socket.recv(BUFFER_SIZE)
 
         self.root.destroy()
     def cancel(self):
@@ -241,11 +241,11 @@ class MainHome:
             print("Uploading file")
 
             file = open(self.filepath, "rb")
-            data = file.read(2048)
+            data = file.read(BUFFER_SIZE)
             while data:
                 self.socket.sendall(data)
-                self.socket.recv(2048)
-                data = file.read(2048)
+                self.socket.recv(BUFFER_SIZE)
+                data = file.read(BUFFER_SIZE)
             self.socket.sendall("DONE".encode(FORMAT))
             print("Upload completed")
             file.close()
@@ -257,7 +257,7 @@ class MainHome:
         NoteApp(self.socket)
 
 
-
+BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

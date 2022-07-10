@@ -189,14 +189,15 @@ class MainHome:
             self.socket.sendall("UPLOAD".encode(FORMAT))
             self.socket.recv(1024)
 
-            # if self.upld_img:
-            #     self.socket.sendall("IMAGE".encode(FORMAT))
-            # else:
-            #     self.socket.sendall("TEXT".encode(FORMAT))
-            # self.socket.recv(1024)
+            if self.upld_img:
+                self.socket.sendall("IMAGE".encode(FORMAT))
+            else:
+                self.socket.sendall("TEXT".encode(FORMAT))
+            self.socket.recv(1024)
             
             self.socket.sendall(self.filepath.encode(FORMAT))
             self.socket.recv(1024)
+            print(self.filepath)
             print("Uploading file")
 
             file = open(self.filepath, "rb")

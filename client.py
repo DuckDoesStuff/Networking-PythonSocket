@@ -218,23 +218,36 @@ class MainHome:
         self.add_text.place(x=0, y=100)
 
         self.add_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white')
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_image)
         self.add_image.place(x=0, y=150)
 
         self.add_note = Button(self.frame, width=10, text="New note", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_note)
         self.add_note.place(x=0, y=200)
 
-    def add_text(self):
-        self.filepath = filedialog.askopenfilename(initialdir = "/", 
-                title = "Select a File")
-
         upload = Button(self.frame, width=10, text="New file", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
         upload.place(x=100, y=150)
+
+    def add_text(self):
+        self.upld_img = False
+        self.filepath = filedialog.askopenfilename(initialdir = "/", 
+                title = "Select a File", filetypes=[("Text files", ".txt")])
+    
+    def add_image(self):
+        self.upld_img = True
+        self.filepath = filedialog.askopenfilename(initialdir = "/", 
+                title = "Select a File", filetypes=[("Image files", ".png .jpg")])
+
     def uploadFile(self):
         if self.filepath:# will not execute if no file is opened
             self.socket.sendall("UPLOAD".encode(FORMAT))
+            self.socket.recv(1024)
+
+            if self.upld_img:
+                self.socket.sendall("IMAGE".encode(FORMAT))
+            else:
+                self.socket.sendall("TEXT".encode(FORMAT))
             self.socket.recv(1024)
             
             filesize = os.path.getsize(self.filepath)
@@ -252,6 +265,7 @@ class MainHome:
                 
             print("Upload completed")
             file.close()
+            self.filepath = ""
     
     def new_note(self):
         self.socket.sendall("ADD_NOTE".encode(FORMAT))

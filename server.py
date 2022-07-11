@@ -20,15 +20,23 @@ def check(username, password):
         return -2
     return 1
 
-def saveToJson(info, database):
-    file = open(database, "r+")
+def saveToJson(filename, filetype):
+    file = open("directory.json", "r+")
     file_data = json.load(file)
+    info = {
+        "id" : len(file_data) + 1,
+        "type" : filetype,
+        "name" : filename
+    }
     file_data.append(info)
     file.seek(0)
     json.dump(file_data, file, indent=4)
     file.close()
 
 def new_file(client, client_name):
+    upld_type = client.recv(1024).decode(FORMAT)
+    client.sendall(upld_type.encode(FORMAT))
+
     info = client.recv(1024).decode(FORMAT).split(SEPARATOR)
     filepath = info[0]
     filesize = int(info[1])
@@ -43,6 +51,11 @@ def new_file(client, client_name):
     if not os.path.exists(upld_path):
         os.mkdir(upld_path)
     os.chdir(upld_path)
+
+    if upld_type == "IMAGE":
+        saveToJson(filename, "image")
+    elif upld_type == "TEXT":
+        saveToJson(filename, "text")
 
     file = open(filename, "wb")
     recved = 0

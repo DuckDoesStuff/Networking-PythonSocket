@@ -1,15 +1,32 @@
-from math import ceil
 from socket import *
 from threading import *
 import json
 import os
+from tkinter import filedialog
+
+special_char = ["~","`","!","@","#","$","%","^","&","*","(",")",
+                "-","_","+","=","{","}","[","]",":",";","\"",
+                "'","<",">","/","?","|","\\",".",","]
+def checkSpecialChar(username):
+    if any(x in username for x in special_char):
+        return True
+    else: 
+        return False
 
 def check(username, password):
-    if len(username) < 5:
+    if len(username) < 5 or checkSpecialChar(username):
         return -1
     if len(password) < 3:
         return -2
     return 1
+
+def saveToJson(info, database):
+    file = open(database, "r+")
+    file_data = json.load(file)
+    file_data.append(info)
+    file.seek(0)
+    json.dump(file_data, file, indent=4)
+    file.close()
 
 def new_file(client, client_name):
     info = client.recv(1024).decode(FORMAT).split(SEPARATOR)

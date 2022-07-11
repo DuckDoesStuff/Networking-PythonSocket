@@ -1,11 +1,9 @@
 import os
 from socket import *
 from threading import *
-from ipaddress import *
 from tkinter import *
 from tkinter import filedialog
 import tkinter
-from PIL import Image, ImageTk
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -70,8 +68,7 @@ class SignIn:
         self.socket.sendall(response.encode(FORMAT))
 
         if response != "SIGNEDIN":
-            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
-            announce.place(x=55, y=175)
+            tkinter.messagebox.showinfo("Announcement", "Incorrect username or password!")
         else:
             self.frame.destroy()
             MainHome(root, self.socket)
@@ -216,25 +213,25 @@ class MainHome:
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
-        self.new_file = Button(self.frame, width=10, text="Browse files", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_file)
-        self.new_file.place(x=0, y=100)
+        self.add_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_text)
+        self.add_text.place(x=0, y=100)
+
+        self.add_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white')
+        self.add_image.place(x=0, y=150)
 
         self.add_note = Button(self.frame, width=10, text="New note", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_note)
         self.add_note.place(x=0, y=200)
 
-    def new_file(self):
+    def add_text(self):
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
                 title = "Select a File")
 
-        file_open = Label(self.frame, text = self.filepath, fg='#06283D',
-                                bg='white', font=('Roboto', 19, 'bold'))
-        file_open.place(x=0, y=0)
-
         upload = Button(self.frame, width=10, text="New file", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
-        upload.place(x=0, y=150)
+        upload.place(x=100, y=150)
     def uploadFile(self):
         if self.filepath:# will not execute if no file is opened
             self.socket.sendall("UPLOAD".encode(FORMAT))

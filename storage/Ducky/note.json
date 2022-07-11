@@ -1,1 +1,17 @@
-[]
+[
+    {
+        "id": 1,
+        "topic": "Test",
+        "content": "123\n"
+    },
+    {
+        "id": 2,
+        "topic": "Haha",
+        "content": "Huhu\n"
+    },
+    {
+        "id": 3,
+        "topic": "CANCEL",
+        "content": "ADD_NOTE"
+    }
+]

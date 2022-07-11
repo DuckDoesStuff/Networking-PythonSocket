@@ -1,9 +1,11 @@
+import json
+import os
 from socket import *
+from sre_constants import NOT_LITERAL_IGNORE
 from threading import *
-from ipaddress import *
 from tkinter import *
 from tkinter import filedialog
-from PIL import Image, ImageTk
+import tkinter
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -68,11 +70,15 @@ class SignIn:
         self.socket.sendall(response.encode(FORMAT))
 
         if response != "SIGNEDIN":
-            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
-            announce.place(x=55, y=175)
+            tkinter.messagebox.showinfo("Announcement", "Incorrect username or password!")
         else:
+            self.socket.sendall("VIEWNOTE".encode(FORMAT))
+            self.socket.recv(1024)
+
+            user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
+
             self.frame.destroy()
-            MainHome(root, self.socket)
+            MainHome(root, self.socket, user_notes)
 
     def sign_up(self):
         self.frame.destroy()
@@ -143,48 +149,140 @@ class SignUp:
         response = self.socket.recv(1024).decode(FORMAT)
         self.socket.sendall(response.encode(FORMAT))
 
-        if response != "SIGNEDUP":
-            announce = Label(self.frame, text=response, bg='white', font=('Roboto', 13))
-            announce.place(x=80, y=175)
-        else:
-            print("Signed up success")
+        if response == "1":
+            tkinter.messagebox.showinfo("Announcement", "Sign up successful please return to login page")
+        elif response == "-1":
+            tkinter.messagebox.showinfo("Announcement", "Invalid username")
+        elif response == "-2":
+            tkinter.messagebox.showinfo("Announcement", "Invalid password")
+        elif response == "-3":
+            tkinter.messagebox.showinfo("Announcement", "Username already exist")
 
     def sign_in(self):
         self.frame.destroy()
         SignIn(root, self.socket)
 
-class MainHome:
-    def __init__(self, frame, socket):
+class TakeNote:
+    def __init__(self, socket):
+        self.root = Tk()
+        self.root.geometry("750x250")
+        self.root.title("New note")
+
         self.socket = socket
-        self.frame = Frame(frame, width=925, height=500)
+        self.frame = Frame(self.root, width=750, height=250)
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
-        self.browse_file = Button(self.frame, width=10, text="Browse files", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_file)
-        self.browse_file.place(x=0, y=100)
+        # Topic entry box
+        self.topicEnt = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
+                            font=('Roboto', 13))
+        self.topicEnt.place(x=0, y=0)
 
-        self.browse_img = Button(self.frame, width=10, text="Browse images", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.browse_img)
-        self.browse_img.place(x=0, y=150)
+        # Content text box
+        self.contentEnt = Text(self.frame, width=30, height=20, fg='black', bg='#f9f9f9', bd=0,
+                            font=('Roboto', 13))
+        self.contentEnt.place(x=0, y=50)
 
-    def browse_file(self):
+        newNote = Button(self.frame, width=10, text="New note", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.upload_note, bg='#009156', fg='white')
+        newNote.place(x=0, y=100)
+
+        # Cancel button
+        cancel = Button(self.frame, width=10, text="Cancel", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, command=self.cancel, bg='#009156', fg='white')
+        cancel.place(x=0, y=150)
+
+        self.root.mainloop()
+    def upload_note(self):
+        self.socket.sendall("ADD_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        topic = self.topicEnt.get()
+        content = self.contentEnt.get(1.0, END)
+
+        if topic == "" or content == "":
+            tkinter.messagebox.showinfo("Announcement", "Topic or content can't be empty")
+            self.socket.sendall("CANCEL".encode(FORMAT))
+            self.socket.recv(1024)
+            self.root.destroy()
+            return
+        
+        self.socket.sendall(topic.encode(FORMAT))
+        self.socket.recv(BUFFER_SIZE)
+
+        self.socket.sendall(content.encode(FORMAT))
+        self.socket.recv(BUFFER_SIZE)
+
+        self.root.destroy()
+        return
+    def cancel(self):
+        self.socket.sendall("CANCEL".encode(FORMAT))
+        self.socket.recv(1024)
+
+        self.root.destroy()
+        return
+        
+
+class MainHome:
+    def __init__(self, frame, socket, user_notes):
+        self.socket = socket
+        self.frame = Frame(frame, width=925, height=500)
+        self.user_notes = user_notes
+        self.frame.pack()
+        self.frame.place(x=0, y=0)
+
+        # New text file button
+        self.add_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_text)
+        self.add_text.place(x=0, y=100)
+
+        # New image file button
+        self.add_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_image)
+        self.add_image.place(x=0, y=150)
+
+        # New note button
+        self.add_note = Button(self.frame, width=10, text="Upload note", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_note)
+        self.add_note.place(x=0, y=200)
+
+        # Upload button
+        upload = Button(self.frame, width=10, text="Upload file", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
+        upload.place(x=100, y=150)
+
+        self.notelist = Listbox(self.frame, width=60, height=40, bd=0)
+        self.notelist.place(x=250, y=100)
+        
+        index = 1
+        for i in self.user_notes:
+            self.notelist.insert(index, i['topic'])
+            index += 1
+
+    def note_list(self):
+        print("Updating list")
+        self.socket.sendall("VIEWNOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        self.user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
+        self.notelist.delete(0, END)
+
+        index = 1
+        for i in self.user_notes:
+            self.notelist.insert(index, i['topic'])
+            index += 1       
+
+    def add_text(self):
         self.upld_img = False
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
                 title = "Select a File", filetypes=[("Text files", ".txt")])
-
-        upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
-        upload.place(x=0, y=200)
-    def browse_img(self):
+    
+    def add_image(self):
         self.upld_img = True
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
-                title = "Select a File", filetypes=[("Image files", ".jpg .png")])
+                title = "Select a File", filetypes=[("Image files", ".png .jpg")])
 
-        upload = Button(self.frame, width=10, text="Upload", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
-        upload.place(x=0, y=200)
-    def upload_file(self):
+    def uploadFile(self):
         if self.filepath:# will not execute if no file is opened
             self.socket.sendall("UPLOAD".encode(FORMAT))
             self.socket.recv(1024)
@@ -195,24 +293,34 @@ class MainHome:
                 self.socket.sendall("TEXT".encode(FORMAT))
             self.socket.recv(1024)
             
-            self.socket.sendall(self.filepath.encode(FORMAT))
-            self.socket.recv(1024)
-            print(self.filepath)
+            filesize = os.path.getsize(self.filepath)
+            info = f"{self.filepath}{SEPARATOR}{filesize}"
+            self.socket.sendall(info.encode(FORMAT))
+
             print("Uploading file")
 
             file = open(self.filepath, "rb")
-            data = file.read(2048)
-            while data:
+            while True:
+                data = file.read(BUFFER_SIZE)
+                if not data:
+                    break
                 self.socket.sendall(data)
-                self.socket.recv(2048)
-                data = file.read(2048)
-            self.socket.sendall("DONE".encode(FORMAT))
+                
             print("Upload completed")
             file.close()
+            # self.note_list()
             self.filepath = ""
+    
+    def upload_note(self):
+        self.socket.sendall("ADD_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
 
+        TakeNote(self.socket)
+        print("hi")
+        # self.note_list()
 
-
+SEPARATOR = "<SEPARATOR>"
+BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

@@ -2,7 +2,111 @@ from socket import *
 from threading import *
 import json
 import os
+from tkinter import filedialog
 
+special_char = ["~","`","!","@","#","$","%","^","&","*","(",")",
+                "-","_","+","=","{","}","[","]",":",";","\"",
+                "'","<",">","/","?","|","\\",".",","]
+def checkSpecialChar(username):
+    if any(x in username for x in special_char):
+        return True
+    else: 
+        return False
+
+def check(username, password):
+    if len(username) < 5 or checkSpecialChar(username):
+        return -1
+    if len(password) < 3:
+        return -2
+    return 1
+
+def saveToJson(filename, filetype):
+    file = open("directory.json", "r+")
+    file_data = json.load(file)
+    info = {
+        "id" : len(file_data) + 1,
+        "type" : filetype,
+        "name" : filename
+    }
+    file_data.append(info)
+    file.seek(0)
+    json.dump(file_data, file, indent=4)
+    file.close()
+
+def new_file(client, client_name):
+    upld_type = client.recv(1024).decode(FORMAT)
+    client.sendall(upld_type.encode(FORMAT))
+
+    info = client.recv(1024).decode(FORMAT).split(SEPARATOR)
+    filepath = info[0]
+    filesize = int(info[1])
+
+    filename = os.path.basename(filepath)
+    print(filename)
+    print(filepath)
+
+    cwd = os.getcwd()
+
+    upld_path = "./storage/" + client_name
+    if not os.path.exists(upld_path):
+        os.mkdir(upld_path)
+    os.chdir(upld_path)
+
+    if upld_type == "IMAGE":
+        saveToJson(filename, "image")
+    elif upld_type == "TEXT":
+        saveToJson(filename, "text")
+
+    file = open(filename, "wb")
+    recved = 0
+    while True:
+        data = client.recv(BUFFER_SIZE)
+        recved += len(data)
+        if recved >= filesize:
+            break
+        file.write(data)
+    file.close()
+    os.chdir(cwd)
+    
+    print(filename)
+    print("Receiving completed")
+
+def new_note(client, client_name):
+    note_file = open("./storage/" + client_name + "/note.json", "r+")
+    note_data = json.load(note_file)
+
+    msg = client.recv(1024).decode(FORMAT)
+    client.sendall(msg.encode(FORMAT))
+    if msg == "CANCEL":
+        note_file.close()
+        return
+    
+    topic = client.recv(BUFFER_SIZE).decode(FORMAT)
+    client.sendall(topic.encode(FORMAT))
+
+    content = client.recv(BUFFER_SIZE).decode(FORMAT)
+    client.sendall(content.encode(FORMAT))
+
+    take_note = {
+        "id" : len(note_data) + 1,
+        "topic" : topic,
+        "content" : content
+    }
+
+    note_data.append(take_note)
+
+    note_file.seek(0)
+    json.dump(note_data, note_file, indent=4)    
+
+    note_file.close()
+
+def view_note(client, client_name):
+    note_path = "./storage/" + client_name + "/note.json"
+    file = open(note_path, "r")
+    user_notes = json.load(file)
+    client.sendall((json.dumps(user_notes)).encode(FORMAT))
+
+    file.close()
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
@@ -23,7 +127,7 @@ def handle_client(client):  # Takes client socket as argument.
             break
         print(option)
         if option == "SIGNIN":
-            print("Logging in")
+            print("Signing in")
             client.sendall(option.encode(FORMAT))
 
             client_name = client.recv(1024).decode(FORMAT)
@@ -35,23 +139,22 @@ def handle_client(client):  # Takes client socket as argument.
             print(client_name)
             print(client_psw)
 
-            #Open and store loaded data as a python object
             f = open('accounts.json', 'r')
-            file_data = json.load(f)
+            acc_data = json.load(f)
             f.close()
             
-            loggedIn = False
-            for user in file_data:
+            signedIn = False
+            for user in acc_data:
                 if user['username'] == client_name:
                     if user['password'] == client_psw:
-                        print("Login success")
+                        print("Sign success")
                         client.sendall("SIGNEDIN".encode(FORMAT))
-                        loggedIn = True
+                        signedIn = True
                     else:
-                        print("Login failed")
+                        print("Signin failed")
                     break
             
-            if not loggedIn:
+            if not signedIn:
                 client.sendall("Incorrect username or password".encode(FORMAT))
             client.recv(1024)
 
@@ -68,124 +171,73 @@ def handle_client(client):  # Takes client socket as argument.
             print(client_name)
             print(client_psw)
 
+
             f = open('accounts.json', 'r+')
-            file_data = json.load(f)
+            acc_data = json.load(f)
             
-            existed = False
-            for user in file_data:
-                if user['username'] == client_name:
-                    print('Username already exist')
-                    f.close()
-                    client.sendall("Username already exist".encode(FORMAT))
-                    existed = True
-                    break
+            checkValid = check(client_name, client_psw)
+            if checkValid == 1:
+                for user in acc_data:
+                    if user['username'] == client_name:
+                        print('Username already exist')
+                        f.close()
+                        checkValid = -3
+                        break
             
-            
-            if not existed:
+            if checkValid == 1:
                 # Append new user's account to database
                 info = {
                     "username" : client_name,
                     "password" : client_psw
                 }
 
-                file_data.append(info)
+                acc_data.append(info)
 
                 f.seek(0)
-                json.dump(file_data, f, indent=4)
+                json.dump(acc_data, f, indent=4)
+                f.close()
 
+                # Init user's folders
                 newfolder = "./storage/" + client_name
                 os.mkdir(newfolder)
+                init_list = []
                 file = open("./storage/" + client_name + "/note.json", "w")
-                temp_dict = [
-                ]
-                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
-                file.write(temp_string)
-                file.close()
-                
-                file = open("./storage/" + client_name + "/file.json", "w")
-                temp_dict = [
-                ]
-                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
-                file.write(temp_string)
+                file.write(json.dumps(init_list, indent=4))
                 file.close()
 
-                file = open("./storage/" + client_name + "/image.json", "w")
-                temp_dict = [
-                ]
-                temp_string = json.dumps(temp_dict, sort_keys=True, indent=4)
-                file.write(temp_string)
+                init_list = []
+                file = open("./storage/" + client_name + "/directory.json", "w")
+                file.write(json.dumps(init_list, indent=4))
                 file.close()
 
                 print("Create account succesfully")
-                f.close()
 
-                client.sendall("SIGNEDUP".encode(FORMAT))
+                client.sendall(str(checkValid).encode(FORMAT))
+            else:
+                client.sendall(str(checkValid).encode(FORMAT))
             client.recv(1024)
 
         elif option == "UPLOAD":
             client.sendall(option.encode(FORMAT))
-
-            file_type = client.recv(1024).decode(FORMAT)
-            client.sendall(file_type.encode(FORMAT))
-
-            filepath = client.recv(1024).decode(FORMAT)
-            client.sendall(filepath.encode(FORMAT))
-
-            os.path.split(filepath)
-            filename = os.path.split(filepath)[1]
-
-            cwd = os.getcwd()
-            print(cwd)
-
-            upld_path = "./storage/" + client_name
-            if not os.path.exists(upld_path):
-                os.mkdir(upld_path)
-            os.chdir(upld_path)
-
-            print(os.getcwd())
-
-            file = open(filename, "wb")
-            data = client.recv(2048)
-            client.sendall(data)
-            running = True
-            while running:
-                file.write(data)
-                try:
-                    data = client.recv(2048)
-                    client.sendall(data)
-                    if data.decode(FORMAT) == "DONE" or not data:
-                        running = False
-                except UnicodeDecodeError:
-                    pass
-            file.close()
-            os.chdir(cwd)    
-            print(filename)
-            print("Receiving completed")
-            
-            # if file_type == "IMAGE":
-            #     namestore = upld_path + '/image.json'
-            # else: 
-            namestore = upld_path + '/file.json'
-            storage = open(namestore, 'r+')
-            file_data = json.load(storage)
-
-            info = {
-                "ID" : filename
-            }
-            
-            file_data.append(info)
-
-            storage.seek(0)
-            json.dump(file_data, storage, indent=4)
-            storage.close()
-
+            new_file(client, client_name)
         
+        elif option == "ADD_NOTE":
+            client.sendall(option.encode(FORMAT))
+            new_note(client, client_name)
+        
+        elif option == "VIEWNOTE":
+            client.sendall(option.encode(FORMAT))
+            view_note(client, client_name)
+
+                
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
-        
+       
 clients = {}
 addresses = {}
 
+SEPARATOR = "<SEPARATOR>"
+BUFFER_SIZE = 10240
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

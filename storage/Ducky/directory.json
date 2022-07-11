@@ -1,22 +1,2 @@
 [
-    {
-        "id": 1,
-        "type": "text",
-        "name": "HAHA.txt"
-    },
-    {
-        "id": 2,
-        "type": "image",
-        "name": "HinhNayDepLam.jpg"
-    },
-    {
-        "id": 3,
-        "type": "text",
-        "name": "HELLO.txt"
-    },
-    {
-        "id": 4,
-        "type": "image",
-        "name": "TA_in_a_chest.png"
-    }
 ]

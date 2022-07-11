@@ -100,6 +100,14 @@ def new_note(client, client_name):
 
     note_file.close()
 
+def view_note(client, client_name):
+    note_path = "./storage/" + client_name + "/note.json"
+    file = open(note_path, "r")
+    user_notes = json.load(file)
+    client.sendall((json.dumps(user_notes)).encode(FORMAT))
+
+    file.close()
+
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
     while True:
@@ -216,6 +224,10 @@ def handle_client(client):  # Takes client socket as argument.
         elif option == "ADD_NOTE":
             client.sendall(option.encode(FORMAT))
             new_note(client, client_name)
+        
+        elif option == "VIEWNOTE":
+            client.sendall(option.encode(FORMAT))
+            view_note(client, client_name)
 
                 
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")

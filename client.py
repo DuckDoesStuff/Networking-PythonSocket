@@ -1,5 +1,7 @@
+import json
 import os
 from socket import *
+from sre_constants import NOT_LITERAL_IGNORE
 from threading import *
 from tkinter import *
 from tkinter import filedialog
@@ -70,8 +72,13 @@ class SignIn:
         if response != "SIGNEDIN":
             tkinter.messagebox.showinfo("Announcement", "Incorrect username or password!")
         else:
+            self.socket.sendall("VIEWNOTE".encode(FORMAT))
+            self.socket.recv(1024)
+
+            user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
+
             self.frame.destroy()
-            MainHome(root, self.socket)
+            MainHome(root, self.socket, user_notes)
 
     def sign_up(self):
         self.frame.destroy()
@@ -155,7 +162,7 @@ class SignUp:
         self.frame.destroy()
         SignIn(root, self.socket)
 
-class NoteApp:
+class TakeNote:
     def __init__(self, socket):
         self.root = Tk()
         self.root.geometry("750x250")
@@ -177,7 +184,7 @@ class NoteApp:
         self.contentEnt.place(x=0, y=50)
 
         newNote = Button(self.frame, width=10, text="New note", activebackground='#ffcd6e', 
-                        font=('Roboto', 11), bd=0, command=self.new_note, bg='#009156', fg='white')
+                        font=('Roboto', 11), bd=0, command=self.upload_note, bg='#009156', fg='white')
         newNote.place(x=0, y=100)
 
         # Cancel button
@@ -186,12 +193,20 @@ class NoteApp:
         cancel.place(x=0, y=150)
 
         self.root.mainloop()
-    def new_note(self):
+    def upload_note(self):
         self.socket.sendall("ADD_NOTE".encode(FORMAT))
         self.socket.recv(1024)
 
         topic = self.topicEnt.get()
         content = self.contentEnt.get(1.0, END)
+
+        if topic == "" or content == "":
+            tkinter.messagebox.showinfo("Announcement", "Topic or content can't be empty")
+            self.socket.sendall("CANCEL".encode(FORMAT))
+            self.socket.recv(1024)
+            self.root.destroy()
+            return
+        
         self.socket.sendall(topic.encode(FORMAT))
         self.socket.recv(BUFFER_SIZE)
 
@@ -199,35 +214,63 @@ class NoteApp:
         self.socket.recv(BUFFER_SIZE)
 
         self.root.destroy()
+        return
     def cancel(self):
         self.socket.sendall("CANCEL".encode(FORMAT))
         self.socket.recv(1024)
 
         self.root.destroy()
+        return
         
 
 class MainHome:
-    def __init__(self, frame, socket):
+    def __init__(self, frame, socket, user_notes):
         self.socket = socket
         self.frame = Frame(frame, width=925, height=500)
+        self.user_notes = user_notes
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
+        # New text file button
         self.add_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_text)
         self.add_text.place(x=0, y=100)
 
+        # New image file button
         self.add_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_image)
         self.add_image.place(x=0, y=150)
 
-        self.add_note = Button(self.frame, width=10, text="New note", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.new_note)
+        # New note button
+        self.add_note = Button(self.frame, width=10, text="Upload note", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_note)
         self.add_note.place(x=0, y=200)
 
-        upload = Button(self.frame, width=10, text="New file", activebackground='red', 
+        # Upload button
+        upload = Button(self.frame, width=10, text="Upload file", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
         upload.place(x=100, y=150)
+
+        self.notelist = Listbox(self.frame, width=60, height=40, bd=0)
+        self.notelist.place(x=250, y=100)
+        
+        index = 1
+        for i in self.user_notes:
+            self.notelist.insert(index, i['topic'])
+            index += 1
+
+    def note_list(self):
+        print("Updating list")
+        self.socket.sendall("VIEWNOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        self.user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
+        self.notelist.delete(0, END)
+
+        index = 1
+        for i in self.user_notes:
+            self.notelist.insert(index, i['topic'])
+            index += 1       
 
     def add_text(self):
         self.upld_img = False
@@ -265,13 +308,16 @@ class MainHome:
                 
             print("Upload completed")
             file.close()
+            # self.note_list()
             self.filepath = ""
     
-    def new_note(self):
+    def upload_note(self):
         self.socket.sendall("ADD_NOTE".encode(FORMAT))
         self.socket.recv(1024)
 
-        NoteApp(self.socket)
+        TakeNote(self.socket)
+        print("hi")
+        # self.note_list()
 
 SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 10240

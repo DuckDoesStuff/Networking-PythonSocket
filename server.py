@@ -79,6 +79,7 @@ def new_note(client, client_name):
     client.sendall(msg.encode(FORMAT))
     if msg == "CANCEL":
         note_file.close()
+        print(msg)
         return
     
     topic = client.recv(BUFFER_SIZE).decode(FORMAT)

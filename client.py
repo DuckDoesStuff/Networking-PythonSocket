@@ -6,6 +6,8 @@ from threading import *
 from tkinter import *
 from tkinter import filedialog
 import tkinter
+from tokenize import tabsize
+from winreg import REG_FULL_RESOURCE_DESCRIPTOR
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -192,20 +194,22 @@ class TakeNote:
                         font=('Roboto', 11), bd=0, command=self.cancel, bg='#009156', fg='white')
         cancel.place(x=0, y=150)
 
-        self.root.mainloop()
-    def upload_note(self):
-        self.socket.sendall("ADD_NOTE".encode(FORMAT))
-        self.socket.recv(1024)
+        # Closing window will cancel sending note
+        self.root.protocol("WM_DELETE_WINDOW", self.cancel)
 
+        self.root.mainloop()
+
+    def upload_note(self):
         topic = self.topicEnt.get()
         content = self.contentEnt.get(1.0, END)
 
-        if topic == "" or content == "":
+        if topic == "" or content == "\n":
             tkinter.messagebox.showinfo("Announcement", "Topic or content can't be empty")
-            self.socket.sendall("CANCEL".encode(FORMAT))
-            self.socket.recv(1024)
-            self.root.destroy()
+            self.cancel()
             return
+
+        self.socket.sendall("ADD_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
         
         self.socket.sendall(topic.encode(FORMAT))
         self.socket.recv(BUFFER_SIZE)
@@ -219,10 +223,10 @@ class TakeNote:
         self.socket.sendall("CANCEL".encode(FORMAT))
         self.socket.recv(1024)
 
+        print("Cancel note")
         self.root.destroy()
         return
         
-
 class MainHome:
     def __init__(self, frame, socket, user_notes):
         self.socket = socket
@@ -251,7 +255,12 @@ class MainHome:
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
         upload.place(x=100, y=150)
 
-        self.notelist = Listbox(self.frame, width=60, height=40, bd=0)
+        # Refresh listbox
+        refresh = Button(self.frame, width=10, text="Refresh", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.note_list)
+        refresh.place(x=100, y=200)
+
+        self.notelist = Listbox(self.frame, width=40, height=20, bd=0, font=('Roboto', 16))
         self.notelist.place(x=250, y=100)
         
         index = 1
@@ -308,7 +317,6 @@ class MainHome:
                 
             print("Upload completed")
             file.close()
-            # self.note_list()
             self.filepath = ""
     
     def upload_note(self):
@@ -316,8 +324,7 @@ class MainHome:
         self.socket.recv(1024)
 
         TakeNote(self.socket)
-        print("hi")
-        # self.note_list()
+        print("HI")
 
 SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 10240

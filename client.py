@@ -1,13 +1,10 @@
 import json
 import os
 from socket import *
-from sre_constants import NOT_LITERAL_IGNORE
 from threading import *
 from tkinter import *
 from tkinter import filedialog
 import tkinter
-from tokenize import tabsize
-from winreg import REG_FULL_RESOURCE_DESCRIPTOR
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -74,7 +71,7 @@ class SignIn:
         if response != "SIGNEDIN":
             tkinter.messagebox.showinfo("Announcement", "Incorrect username or password!")
         else:
-            self.socket.sendall("VIEWNOTE".encode(FORMAT))
+            self.socket.sendall("NOTE_LIST".encode(FORMAT))
             self.socket.recv(1024)
 
             user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
@@ -226,7 +223,52 @@ class TakeNote:
         print("Cancel note")
         self.root.destroy()
         return
-        
+
+class ShowNote:
+    def __init__(self, socket, note_id):
+        self.root = Tk()
+        self.root.geometry("750x250")
+        self.root.title("New note")
+
+        self.socket = socket
+        self.frame = Frame(self.root, width=750, height=250, bg='white')
+        self.frame.pack()
+        self.frame.place(x=0, y=0)
+
+        # Asking server to send note data
+        self.socket.sendall("VIEW_NOTE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Sending Note's ID
+        self.socket.sendall(str(note_id).encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Receiving Note's info
+        topic = self.socket.recv(1024).decode(FORMAT)
+        self.socket.sendall(topic.encode(FORMAT))
+
+        content = self.socket.recv(1024).decode(FORMAT)
+        self.socket.sendall(content.encode(FORMAT))
+
+        # Showing Note's topic and content
+        view_topic = Label(self.frame, width=10, text=topic, 
+                            font=('Roboto', 14), bg='white', fg='black')
+        view_topic.place(x=0, y=0)
+
+        view_content = Label(self.frame, width=10, text=content, 
+                            font=('Roboto', 12), bg='white', fg='black')
+        view_content.place(x=0, y=30)
+
+        # Close Note window
+        close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
+        close_btn.place(x=0, y=150)
+
+        self.root.mainloop()
+
+    def close_window(self):
+        self.root.destroy()
+
 class MainHome:
     def __init__(self, frame, socket, user_notes):
         self.socket = socket
@@ -257,20 +299,28 @@ class MainHome:
 
         # Refresh listbox
         refresh = Button(self.frame, width=10, text="Refresh", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.note_list)
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.update_list)
         refresh.place(x=100, y=200)
 
         self.notelist = Listbox(self.frame, width=40, height=20, bd=0, font=('Roboto', 16))
         self.notelist.place(x=250, y=100)
+
+        self.notelist.bind("<<ListboxSelect>>", self.show_note)
         
         index = 1
         for i in self.user_notes:
             self.notelist.insert(index, i['topic'])
             index += 1
-
-    def note_list(self):
+    
+    def show_note(self, event):
+        selection = event.widget.curselection()
+        note_id = selection[0] + 1
+        
+        ShowNote(self.socket, note_id)
+        
+    def update_list(self):
         print("Updating list")
-        self.socket.sendall("VIEWNOTE".encode(FORMAT))
+        self.socket.sendall("NOTE_LIST".encode(FORMAT))
         self.socket.recv(1024)
 
         self.user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))

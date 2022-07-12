@@ -2,7 +2,6 @@ from socket import *
 from threading import *
 import json
 import os
-from tkinter import filedialog
 
 special_char = ["~","`","!","@","#","$","%","^","&","*","(",")",
                 "-","_","+","=","{","}","[","]",":",";","\"",
@@ -101,13 +100,31 @@ def new_note(client, client_name):
 
     note_file.close()
 
-def view_note(client, client_name):
+def note_list(client, client_name):
     note_path = "./storage/" + client_name + "/note.json"
     file = open(note_path, "r")
     user_notes = json.load(file)
     client.sendall((json.dumps(user_notes)).encode(FORMAT))
 
     file.close()
+
+def view_note(client, client_name):
+    note_id = int(client.recv(1024).decode(FORMAT))
+    client.sendall(str(note_id).encode(FORMAT))
+
+    note_path = "./storage/" + client_name + "/note.json"
+    file = open(note_path, "r")
+    note_data = json.load(file)
+    file.close()
+
+    for note in note_data:
+        if note['id'] == note_id:
+            client.sendall(note['topic'].encode(FORMAT))
+            client.recv(1024)
+
+            client.sendall(note['content'].encode(FORMAT))
+            client.recv(1024)
+            break
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
@@ -226,7 +243,11 @@ def handle_client(client):  # Takes client socket as argument.
             client.sendall(option.encode(FORMAT))
             new_note(client, client_name)
         
-        elif option == "VIEWNOTE":
+        elif option == "NOTE_LIST":
+            client.sendall(option.encode(FORMAT))
+            note_list(client, client_name)
+        
+        elif option == "VIEW_NOTE":
             client.sendall(option.encode(FORMAT))
             view_note(client, client_name)
 

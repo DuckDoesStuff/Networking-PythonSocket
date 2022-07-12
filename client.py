@@ -1,3 +1,4 @@
+from importlib.metadata import files
 import json
 import os
 from socket import *
@@ -5,25 +6,26 @@ from threading import *
 from tkinter import *
 from tkinter import filedialog
 import tkinter
+from turtle import down
 
 class SignIn:
     def __init__(self, frame, socket):
         self.socket = socket
 
-        self.bg = PhotoImage(file = './images/signin.png')
-        self.my_label = Label(root,image=self.bg)
-        self.my_label.image = self.bg
-        self.my_label.pack(fill='both', expand='yes')
-        self.my_label.place(x=-2,y=-2)
+        bg = PhotoImage(file = './images/signin.png')
+        title_label = Label(root,image=bg)
+        title_label.image = bg
+        title_label.pack(fill='both', expand='yes')
+        title_label.place(x=-2,y=-2)
         
         self.frame = Frame(frame, width=350, height=350)
         self.frame.place(x=100, y=50)
 
-        self.bg = PhotoImage(file = './images/signin.png')
-        self.my_label = Label(self.frame,image=self.bg)
-        self.my_label.image = self.bg
-        self.my_label.pack(fill='both', expand='yes')
-        self.my_label.place(x=-102,y=-52)
+        bg = PhotoImage(file = './images/signin.png')
+        title_label = Label(self.frame,image=bg)
+        title_label.image = bg
+        title_label.pack(fill='both', expand='yes')
+        title_label.place(x=-102,y=-52)
         
         self.user = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
@@ -33,34 +35,34 @@ class SignIn:
                             font=('Roboto', 13))
         self.pswd.place(x=121, y=194)
 
-
-        # Signin button
-        self.btn = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
+        # Sign in button
+        btn = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, command=self.sign_in, bg='#009156', fg='white')
-        self.btn.place(x=145, y=260)
+        btn.place(x=145, y=260)
 
-        self.sgup = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
+        # Sign up button
+        sign_up_btn = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.sign_up)
-        self.sgup.place(x=145, y=310)
+        sign_up_btn.place(x=145, y=310)
     
     def sign_in(self):
-        self.name = self.user.get()
-        self.psw = self.pswd.get()
+        name = self.user.get()
+        psw = self.pswd.get()
 
-        if self.name == '' or self.psw == '':
+        if name == '' or psw == '':
             print("Fields can't be empty")
             return
         
         # Notify server client is logging in
-        option = "SIGNIN"
+        option = "SIGN_IN"
         self.socket.sendall(option.encode(FORMAT))
         self.socket.recv(1024)
 
         # Sending client's data
-        self.socket.sendall(self.name.encode(FORMAT))
+        self.socket.sendall(name.encode(FORMAT))
         self.socket.recv(1024)
 
-        self.socket.sendall(self.psw.encode(FORMAT))
+        self.socket.sendall(psw.encode(FORMAT))
         self.socket.recv(1024)
 
         print("Sign in data sent")
@@ -68,16 +70,11 @@ class SignIn:
         response = self.socket.recv(1024).decode(FORMAT)
         self.socket.sendall(response.encode(FORMAT))
 
-        if response != "SIGNEDIN":
+        if response != "SUCCESS":
             tkinter.messagebox.showinfo("Announcement", "Incorrect username or password!")
         else:
-            self.socket.sendall("NOTE_LIST".encode(FORMAT))
-            self.socket.recv(1024)
-
-            user_notes = json.loads(self.socket.recv(1024).decode(FORMAT))
-
             self.frame.destroy()
-            MainHome(root, self.socket, user_notes)
+            MainHome(root, self.socket)
 
     def sign_up(self):
         self.frame.destroy()
@@ -87,20 +84,20 @@ class SignUp:
     def __init__(self, frame, socket):
         self.socket = socket
 
-        self.bg = PhotoImage(file = './images/signup.png')
-        self.my_label = Label(root,image=self.bg)
-        self.my_label.image = self.bg
-        self.my_label.pack(fill='both', expand='yes')
-        self.my_label.place(x=-2,y=-2)
+        bg = PhotoImage(file = './images/signup.png')
+        title_label = Label(root,image=bg)
+        title_label.image = bg
+        title_label.pack(fill='both', expand='yes')
+        title_label.place(x=-2,y=-2)
         
         self.frame = Frame(frame, width=350, height=350)
         self.frame.place(x=100, y=50)
 
-        self.bg = PhotoImage(file = './images/signup.png')
-        self.my_label = Label(self.frame,image=self.bg)
-        self.my_label.image = self.bg
-        self.my_label.pack(fill='both', expand='yes')
-        self.my_label.place(x=-102,y=-52)
+        bg = PhotoImage(file = './images/signup.png')
+        title_label = Label(self.frame,image=bg)
+        title_label.image = bg
+        title_label.pack(fill='both', expand='yes')
+        title_label.place(x=-102,y=-52)
         
         self.user = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
@@ -111,36 +108,37 @@ class SignUp:
         self.pswd.place(x=121, y=194)
 
 
-        # Signup button
-        self.btn = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
+        # Sign up button
+        btn = Button(self.frame, width=10, text="Sign up", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, command=self.sign_up, bg='#009156', fg='white')
-        self.btn.place(x=145, y=260)
+        btn.place(x=145, y=260)
 
-        self.sgin = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
+        # Sign in button
+        sign_in_btn = Button(self.frame, width=10, text="Sign in", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.sign_in)
-        self.sgin.place(x=145, y=310)
+        sign_in_btn.place(x=145, y=310)
     
     def sign_up(self):
-        self.name = self.user.get()
-        self.psw = self.pswd.get()
+        name = self.user.get()
+        psw = self.pswd.get()
 
-        if self.name == 'Username':
+        if name == 'Username':
             print("Invalid username")
             return
-        if self.psw == '' or self.name == '':
+        if psw == '' or name == '':
             print("Fields can't be empty")
             return
 
         # Notify server client is signing up
-        option = "SIGNUP"
+        option = "SIGN_UP"
         self.socket.sendall(option.encode(FORMAT))
         self.socket.recv(1024)
 
         # Sending client's data
-        self.socket.sendall(self.name.encode(FORMAT))
+        self.socket.sendall(name.encode(FORMAT))
         self.socket.recv(1024)#? couldn't receive anything
 
-        self.socket.sendall(self.psw.encode(FORMAT))
+        self.socket.sendall(psw.encode(FORMAT))
         self.socket.recv(1024)
 
         print("Sign up data sent")
@@ -228,7 +226,7 @@ class ShowNote:
     def __init__(self, socket, note_id):
         self.root = Tk()
         self.root.geometry("750x250")
-        self.root.title("New note")
+        self.root.title("Viewing note")
 
         self.socket = socket
         self.frame = Frame(self.root, width=750, height=250, bg='white')
@@ -269,57 +267,144 @@ class ShowNote:
     def close_window(self):
         self.root.destroy()
 
-class MainHome:
-    def __init__(self, frame, socket, user_notes):
+class ShowFile:
+    def __init__(self, socket, file_id):
+        self.root = Tk()
+        self.root.geometry("720x360")
+        self.root.title("Viewing file")
+
         self.socket = socket
-        self.frame = Frame(frame, width=925, height=500)
-        self.user_notes = user_notes
+        self.frame = Frame(self.root, width=720, height=360, bg='white')
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
+        # Asking server to send file data
+        self.socket.sendall("VIEW_FILE".encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Sending File's ID
+        self.socket.sendall(str(file_id).encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Receiving File's info
+        self.file_name = self.socket.recv(1024).decode(FORMAT)
+        self.socket.sendall(self.file_name.encode(FORMAT))
+
+        view = Label(self.frame, width=10, text=self.file_name, 
+                            font=('Roboto', 14), bg='white', fg='black')
+        view.place(x=0, y=0)
+
+        # Download button
+        dwn_btn = Button(self.frame, width=10, text="Download", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.download_file)
+        dwn_btn.place(x=0, y=100)
+
+        # Close Note window
+        close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
+        close_btn.place(x=0, y=150)
+
+        self.root.mainloop()
+    
+    def download_file(self):
+        self.socket.sendall("DOWNLOAD".encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Send file name to server
+        self.socket.sendall(self.file_name.encode(FORMAT))
+        self.socket.recv(1024)
+
+        cwd = os.getcwd()
+        down_path = "C:/Users/Admin/Desktop/Downloads"
+        if not os.path.exists(down_path):
+            os.mkdir(down_path)
+        os.chdir(down_path)
+
+        # Receiving file data
+        filesize = int(self.socket.recv(1024).decode(FORMAT))
+        self.socket.sendall(str(filesize).encode(FORMAT))
+        
+        file = open(self.file_name, "wb")
+        recved = 0
+        while True:
+            data = self.socket.recv(BUFFER_SIZE)
+            recved += len(data)
+            if recved >= filesize:
+                break
+            file.write(data)
+        file.close()
+
+        os.chdir(cwd)
+
+    def close_window(self):
+        self.root.destroy()
+
+class MainHome:
+    def __init__(self, frame, socket):
+        self.socket = socket
+        self.frame = Frame(frame, width=925, height=500)
+        self.frame.pack()
+        self.frame.place(x=0, y=0)
+        self.filepath = ""
+
         # New text file button
-        self.add_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
+        browse_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_text)
-        self.add_text.place(x=0, y=100)
+        browse_text.place(x=0, y=350)
 
         # New image file button
-        self.add_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
+        browse_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_image)
-        self.add_image.place(x=0, y=150)
+        browse_image.place(x=0, y=400)
 
-        # New note button
-        self.add_note = Button(self.frame, width=10, text="Upload note", activebackground='red', 
+        # Upload note button
+        upload_note_btn = Button(self.frame, width=10, text="Upload note", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_note)
-        self.add_note.place(x=0, y=200)
+        upload_note_btn.place(x=0, y=450)
 
-        # Upload button
-        upload = Button(self.frame, width=10, text="Upload file", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.uploadFile)
-        upload.place(x=100, y=150)
+        # Upload file button
+        upload_file_btn = Button(self.frame, width=10, text="Upload file", activebackground='red', 
+                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
+        upload_file_btn.place(x=100, y=400)
 
         # Refresh listbox
         refresh = Button(self.frame, width=10, text="Refresh", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.update_list)
-        refresh.place(x=100, y=200)
+        refresh.place(x=100, y=450)
 
-        self.notelist = Listbox(self.frame, width=40, height=20, bd=0, font=('Roboto', 16))
-        self.notelist.place(x=250, y=100)
+        # Note list handling
+        self.notelist = Listbox(self.frame, width=30, height=10, bd=0, font=('Roboto', 16),
+                                highlightthickness=0, selectbackground='#D4D4D4')
+        self.notelist.place(x=0, y=0)
 
         self.notelist.bind("<<ListboxSelect>>", self.show_note)
         
-        index = 1
-        for i in self.user_notes:
-            self.notelist.insert(index, i['topic'])
-            index += 1
-    
+
+        # File list handling
+        self.filelist = Listbox(self.frame, width=30, height=10, bd=0, font=('Roboto', 16),
+                                highlightthickness=0, selectbackground='#D4D4D4')
+        self.filelist.place(x=565, y=0)
+
+        self.filelist.bind("<<ListboxSelect>>", self.show_file)
+        
+
+        self.update_list()
+
     def show_note(self, event):
         selection = event.widget.curselection()
         note_id = selection[0] + 1
         
         ShowNote(self.socket, note_id)
+    
+    def show_file(self, event):
+        selection = event.widget.curselection()
+        file_id = selection[0] + 1
+
+        ShowFile(self.socket, file_id)
         
     def update_list(self):
         print("Updating list")
+        # Asking for notes list
         self.socket.sendall("NOTE_LIST".encode(FORMAT))
         self.socket.recv(1024)
 
@@ -329,7 +414,19 @@ class MainHome:
         index = 1
         for i in self.user_notes:
             self.notelist.insert(index, i['topic'])
-            index += 1       
+            index += 1  
+        
+        # Asking for files list
+        self.socket.sendall("FILE_LIST".encode(FORMAT))
+        self.socket.recv(1024)
+
+        self.user_files = json.loads(self.socket.recv(1024).decode(FORMAT))
+        self.filelist.delete(0, END)
+
+        index = 1
+        for i in self.user_files:
+            self.filelist.insert(index, i['name'])
+            index += 1
 
     def add_text(self):
         self.upld_img = False
@@ -341,9 +438,9 @@ class MainHome:
         self.filepath = filedialog.askopenfilename(initialdir = "/", 
                 title = "Select a File", filetypes=[("Image files", ".png .jpg")])
 
-    def uploadFile(self):
+    def upload_file(self):
         if self.filepath:# will not execute if no file is opened
-            self.socket.sendall("UPLOAD".encode(FORMAT))
+            self.socket.sendall("ADD_FILE".encode(FORMAT))
             self.socket.recv(1024)
 
             if self.upld_img:
@@ -368,16 +465,16 @@ class MainHome:
             print("Upload completed")
             file.close()
             self.filepath = ""
-    
+
     def upload_note(self):
         self.socket.sendall("ADD_NOTE".encode(FORMAT))
         self.socket.recv(1024)
 
         TakeNote(self.socket)
-        print("HI")
+
 
 SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 10240
+BUFFER_SIZE = 4096
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)
@@ -386,7 +483,7 @@ FORMAT = 'utf8'
 root = Tk()
 root.geometry('925x500+300+200')        #Set window size and position
 root.resizable(False, False)            #Disable X and Y resizing
-root.title('Demo')
+root.title('E-Note')
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)

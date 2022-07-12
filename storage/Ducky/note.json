@@ -1,37 +1,7 @@
 [
     {
         "id": 1,
-        "topic": "Test",
-        "content": "123\n"
-    },
-    {
-        "id": 2,
-        "topic": "Haha",
-        "content": "Huhu\n"
-    },
-    {
-        "id": 3,
-        "topic": "123",
-        "content": "123\n"
-    },
-    {
-        "id": 4,
-        "topic": "123",
-        "content": "123\n"
-    },
-    {
-        "id": 5,
-        "topic": "hinh nhu dc r",
-        "content": "haha\n"
-    },
-    {
-        "id": 6,
-        "topic": "132",
-        "content": "123\n"
-    },
-    {
-        "id": 7,
-        "topic": "HIHI",
-        "content": "123\n"
+        "topic": "Test note",
+        "content": "nice it works\n"
     }
 ]

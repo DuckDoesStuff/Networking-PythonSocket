@@ -32,7 +32,7 @@ def saveToJson(filename, filetype):
     json.dump(file_data, file, indent=4)
     file.close()
 
-def new_file(client, client_name):
+def add_file(client, client_name):
     upld_type = client.recv(1024).decode(FORMAT)
     client.sendall(upld_type.encode(FORMAT))
 
@@ -41,8 +41,8 @@ def new_file(client, client_name):
     filesize = int(info[1])
 
     filename = os.path.basename(filepath)
+    print(filesize)
     print(filename)
-    print(filepath)
 
     cwd = os.getcwd()
 
@@ -67,10 +67,9 @@ def new_file(client, client_name):
     file.close()
     os.chdir(cwd)
     
-    print(filename)
     print("Receiving completed")
 
-def new_note(client, client_name):
+def add_note(client, client_name):
     note_file = open("./storage/" + client_name + "/note.json", "r+")
     note_data = json.load(note_file)
 
@@ -108,6 +107,14 @@ def note_list(client, client_name):
 
     file.close()
 
+def file_list(client, client_name):
+    note_path = "./storage/" + client_name + "/directory.json"
+    file = open(note_path, "r")
+    user_notes = json.load(file)
+    client.sendall((json.dumps(user_notes)).encode(FORMAT))
+
+    file.close()
+
 def view_note(client, client_name):
     note_id = int(client.recv(1024).decode(FORMAT))
     client.sendall(str(note_id).encode(FORMAT))
@@ -125,6 +132,45 @@ def view_note(client, client_name):
             client.sendall(note['content'].encode(FORMAT))
             client.recv(1024)
             break
+
+def view_file(client, client_name):
+    file_id = int(client.recv(1024).decode(FORMAT))
+    client.sendall(str(file_id).encode(FORMAT))
+
+    file_path = "./storage/" + client_name + "/directory.json"
+    file = open(file_path, "r")
+    file_data = json.load(file)
+    file.close()
+
+    for file in file_data:
+        if file['id'] == file_id:
+            client.sendall(file['name'].encode(FORMAT))
+            client.recv(1024)
+            # Something something
+            break  
+
+def download_file(client, client_name):
+    filename = client.recv(1024).decode(FORMAT)
+    client.sendall(filename.encode(FORMAT))
+
+    cwd = os.getcwd()
+    os.chdir("./storage/" + client_name)
+
+    file = open(filename, "rb")
+
+    filesize = os.path.getsize(filename)
+    client.sendall(str(filesize).encode(FORMAT))
+    client.recv(1024)
+
+    while True:
+        data = file.read(BUFFER_SIZE)
+        if not data:
+            break
+        client.sendall(data)    
+
+    file.close()
+    os.chdir(cwd)
+    print("Download completed")
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
@@ -144,7 +190,7 @@ def handle_client(client):  # Takes client socket as argument.
         if not option:
             break
         print(option)
-        if option == "SIGNIN":
+        if option == "SIGN_IN":
             print("Signing in")
             client.sendall(option.encode(FORMAT))
 
@@ -166,7 +212,7 @@ def handle_client(client):  # Takes client socket as argument.
                 if user['username'] == client_name:
                     if user['password'] == client_psw:
                         print("Sign success")
-                        client.sendall("SIGNEDIN".encode(FORMAT))
+                        client.sendall("SUCCESS".encode(FORMAT))
                         signedIn = True
                     else:
                         print("Signin failed")
@@ -176,7 +222,7 @@ def handle_client(client):  # Takes client socket as argument.
                 client.sendall("Incorrect username or password".encode(FORMAT))
             client.recv(1024)
 
-        elif option == "SIGNUP":
+        elif option == "SIGN_UP":
             print("Signing up")
             client.sendall(option.encode(FORMAT))
 
@@ -235,13 +281,13 @@ def handle_client(client):  # Takes client socket as argument.
                 client.sendall(str(checkValid).encode(FORMAT))
             client.recv(1024)
 
-        elif option == "UPLOAD":
+        elif option == "ADD_FILE":
             client.sendall(option.encode(FORMAT))
-            new_file(client, client_name)
+            add_file(client, client_name)
         
         elif option == "ADD_NOTE":
             client.sendall(option.encode(FORMAT))
-            new_note(client, client_name)
+            add_note(client, client_name)
         
         elif option == "NOTE_LIST":
             client.sendall(option.encode(FORMAT))
@@ -251,6 +297,17 @@ def handle_client(client):  # Takes client socket as argument.
             client.sendall(option.encode(FORMAT))
             view_note(client, client_name)
 
+        elif option == "FILE_LIST":
+            client.sendall(option.encode(FORMAT))
+            file_list(client, client_name)
+        
+        elif option == "VIEW_FILE":
+            client.sendall(option.encode(FORMAT))
+            view_file(client, client_name)
+        
+        elif option == "DOWNLOAD":
+            client.sendall(option.encode(FORMAT))
+            download_file(client, client_name)
                 
     print(str(addresses[client][0]) + ":" + str(addresses[client][1]) + " has disconnected")
     client.close()
@@ -259,7 +316,7 @@ clients = {}
 addresses = {}
 
 SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 10240
+BUFFER_SIZE = 4096
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

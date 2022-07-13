@@ -1,4 +1,6 @@
+from fileinput import filename
 from importlib.metadata import files
+import cv2
 import json
 import os
 from socket import *
@@ -7,6 +9,7 @@ from tkinter import *
 from tkinter import filedialog
 import tkinter
 from turtle import down
+import shutil
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -290,21 +293,59 @@ class ShowFile:
         self.file_name = self.socket.recv(1024).decode(FORMAT)
         self.socket.sendall(self.file_name.encode(FORMAT))
 
-        view = Label(self.frame, width=10, text=self.file_name, 
-                            font=('Roboto', 14), bg='white', fg='black')
-        view.place(x=0, y=0)
+        self.save_temp()
+
 
         # Download button
         dwn_btn = Button(self.frame, width=10, text="Download", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.download_file)
         dwn_btn.place(x=0, y=100)
 
+
         # Close Note window
         close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
         close_btn.place(x=0, y=150)
 
-        self.root.mainloop()
+        
+        # View image
+        path = './temp/' + self.file_name
+
+        img = cv2.imread(path)
+
+        cv2.imshow('Display Image', img)
+        cv2.waitKey(0)
+    
+    def save_temp(self):
+        self.socket.sendall("DOWNLOAD".encode(FORMAT))
+        self.socket.recv(1024)
+
+        # Send file name to server
+        self.socket.sendall(self.file_name.encode(FORMAT))
+        self.socket.recv(1024)
+
+        cwd = os.getcwd()
+        down_path = "./temp/"
+        if not os.path.exists(down_path):
+            os.mkdir(down_path)
+        os.chdir(down_path)
+
+        # Receiving file data
+        filesize = int(self.socket.recv(1024).decode(FORMAT))
+        self.socket.sendall(str(filesize).encode(FORMAT))
+        
+        file = open(self.file_name, "wb")
+        recved = 0
+        while True:
+            data = self.socket.recv(BUFFER_SIZE)
+            recved += len(data)
+            if recved >= filesize:
+                file.write(data)
+                break
+            file.write(data)
+        file.close()
+
+        os.chdir(cwd)
     
     def download_file(self):
         self.socket.sendall("DOWNLOAD".encode(FORMAT))
@@ -336,8 +377,14 @@ class ShowFile:
         file.close()
 
         os.chdir(cwd)
+        self.clear_folder()
+
+    def clear_folder(self):
+        shutil.rmtree("./temp/")
+        os.makedirs("./temp/", exist_ok=True)
 
     def close_window(self):
+        self.clear_folder()
         self.root.destroy()
 
 class MainHome:

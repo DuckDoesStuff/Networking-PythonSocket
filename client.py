@@ -1,5 +1,3 @@
-from fileinput import filename
-from importlib.metadata import files
 import cv2
 import json
 import os
@@ -8,7 +6,6 @@ from threading import *
 from tkinter import *
 from tkinter import filedialog
 import tkinter
-from turtle import down
 import shutil
 
 class SignIn:
@@ -273,11 +270,11 @@ class ShowNote:
 class ShowFile:
     def __init__(self, socket, file_id):
         self.root = Tk()
-        self.root.geometry("720x360")
+        self.root.geometry("120x120")
         self.root.title("Viewing file")
 
         self.socket = socket
-        self.frame = Frame(self.root, width=720, height=360, bg='white')
+        self.frame = Frame(self.root, width=120, height=120, bg='white')
         self.frame.pack()
         self.frame.place(x=0, y=0)
 
@@ -289,32 +286,30 @@ class ShowFile:
         self.socket.sendall(str(file_id).encode(FORMAT))
         self.socket.recv(1024)
 
-        # Receiving File's info
+        # Receiving File's data
         self.file_name = self.socket.recv(1024).decode(FORMAT)
         self.socket.sendall(self.file_name.encode(FORMAT))
 
         self.save_temp()
 
+        # View image
+        path = './temp/' + self.file_name
+        img = cv2.imread(path)
+        cv2.imshow('Viewing Image', img)
 
         # Download button
         dwn_btn = Button(self.frame, width=10, text="Download", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.download_file)
-        dwn_btn.place(x=0, y=100)
+        dwn_btn.place(x=13, y=20)
 
 
-        # Close Note window
+        # Close window button
         close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
                         font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
-        close_btn.place(x=0, y=150)
+        close_btn.place(x=13, y=50)
 
+        self.root.protocol("WM_DELETE_WINDOW", self.close_window)
         
-        # View image
-        path = './temp/' + self.file_name
-
-        img = cv2.imread(path)
-
-        cv2.imshow('Display Image', img)
-        cv2.waitKey(0)
     
     def save_temp(self):
         self.socket.sendall("DOWNLOAD".encode(FORMAT))
@@ -519,7 +514,6 @@ class MainHome:
         self.socket.recv(1024)
 
         TakeNote(self.socket)
-
 
 SEPARATOR = "<SEPARATOR>"
 BUFFER_SIZE = 300000

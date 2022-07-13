@@ -330,6 +330,7 @@ class ShowFile:
             data = self.socket.recv(BUFFER_SIZE)
             recved += len(data)
             if recved >= filesize:
+                file.write(data)
                 break
             file.write(data)
         file.close()
@@ -474,7 +475,7 @@ class MainHome:
 
 
 SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 300000
 HOST = '127.0.0.1'
 PORT = 33000
 ADDR = (HOST, PORT)

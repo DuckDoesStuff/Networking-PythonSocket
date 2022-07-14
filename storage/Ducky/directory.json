@@ -1,17 +1,2 @@
 [
-    {
-        "id": 1,
-        "type": "text",
-        "name": "HELLO.txt"
-    },
-    {
-        "id": 2,
-        "type": "image",
-        "name": "ted-background-01.png"
-    },
-    {
-        "id": 3,
-        "type": "text",
-        "name": "Text.txt"
-    }
 ]

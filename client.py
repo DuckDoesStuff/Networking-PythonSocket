@@ -161,14 +161,26 @@ class SignUp:
 
 class TakeNote:
     def __init__(self, socket):
-        self.root = Tk()
-        self.root.geometry("750x250")
+        self.root = Toplevel()
+        self.root.geometry("925x500")
         self.root.title("New note")
 
         self.socket = socket
-        self.frame = Frame(self.root, width=750, height=250)
-        self.frame.pack()
+
+        bg = PhotoImage(file = './images/note_up.png')
+        background = Label(self.root,image=bg)
+        background.image = bg
+        background.pack(fill='both', expand='yes')
+        background.place(x=0,y=0)
+
+        self.frame = Frame(self.root, width=400, height=500)
         self.frame.place(x=0, y=0)
+
+        bg = PhotoImage(file = './images/note_up.png')
+        background = Label(self.frame,image=bg)
+        background.image = bg
+        background.pack(fill='both', expand='yes')
+        background.place(x=0,y=0)
 
         # Topic entry box
         self.topicEnt = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
@@ -310,6 +322,8 @@ class ShowFile:
         close_btn.place(x=13, y=50)
 
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
+
+        self.root.mainloop()
         
     
     def save_temp(self):

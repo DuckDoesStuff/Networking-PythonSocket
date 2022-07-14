@@ -7,6 +7,7 @@ from tkinter import *
 from tkinter import filedialog
 import tkinter
 import shutil
+from pathlib import Path
 
 class SignIn:
     def __init__(self, frame, socket):
@@ -365,7 +366,7 @@ class ShowFile:
         self.socket.recv(1024)
 
         cwd = os.getcwd()
-        down_path = "C:/Users/Admin/Desktop/Downloads"
+        down_path = str(Path.home() / "Downloads")
         if not os.path.exists(down_path):
             os.mkdir(down_path)
         os.chdir(down_path)
@@ -386,7 +387,7 @@ class ShowFile:
         file.close()
 
         os.chdir(cwd)
-        self.clear_folder()
+        self.close_window()
 
     def clear_folder(self):
         shutil.rmtree("./temp/")

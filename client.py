@@ -166,14 +166,7 @@ class TakeNote:
         self.root.title("New note")
 
         self.socket = socket
-
-        bg = PhotoImage(file = './images/note_up.png')
-        background = Label(self.root,image=bg)
-        background.image = bg
-        background.pack(fill='both', expand='yes')
-        background.place(x=0,y=0)
-
-        self.frame = Frame(self.root, width=400, height=500)
+        self.frame = Frame(self.root, width=950, height=500)
         self.frame.place(x=0, y=0)
 
         bg = PhotoImage(file = './images/note_up.png')
@@ -183,23 +176,23 @@ class TakeNote:
         background.place(x=0,y=0)
 
         # Topic entry box
-        self.topicEnt = Entry(self.frame, width=19, fg='black', bg='#f9f9f9', bd=0,
+        self.topicEnt = Entry(self.frame, width=55, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.topicEnt.place(x=0, y=0)
+        self.topicEnt.place(x=210, y=95)
 
         # Content text box
-        self.contentEnt = Text(self.frame, width=30, height=20, fg='black', bg='#f9f9f9', bd=0,
+        self.contentEnt = Text(self.frame, width=55, height=5, fg='black', bg='#f9f9f9', bd=0,
                             font=('Roboto', 13))
-        self.contentEnt.place(x=0, y=50)
+        self.contentEnt.place(x=210, y=170)
 
         newNote = Button(self.frame, width=10, text="New note", activebackground='#ffcd6e', 
                         font=('Roboto', 11), bd=0, command=self.upload_note, bg='#009156', fg='white')
-        newNote.place(x=0, y=100)
+        newNote.place(x=210, y=390)
 
         # Cancel button
         cancel = Button(self.frame, width=10, text="Cancel", activebackground='#ffcd6e', 
-                        font=('Roboto', 11), bd=0, command=self.cancel, bg='#009156', fg='white')
-        cancel.place(x=0, y=150)
+                        font=('Roboto', 11), bd=0, command=self.cancel, bg='white', fg='#009156')
+        cancel.place(x=800, y=450)
 
         # Closing window will cancel sending note
         self.root.protocol("WM_DELETE_WINDOW", self.cancel)
@@ -236,14 +229,20 @@ class TakeNote:
 
 class ShowNote:
     def __init__(self, socket, note_id):
-        self.root = Tk()
-        self.root.geometry("750x250")
+        self.root = Toplevel()
+        self.root.geometry("925x500")
         self.root.title("Viewing note")
 
         self.socket = socket
-        self.frame = Frame(self.root, width=750, height=250, bg='white')
+        self.frame = Frame(self.root, width=925, height=500)
         self.frame.pack()
         self.frame.place(x=0, y=0)
+
+        bg = PhotoImage(file = './images/note_load.png')
+        background = Label(self.frame,image=bg)
+        background.image = bg
+        background.pack(fill='both', expand='yes')
+        background.place(x=0,y=0)
 
         # Asking server to send note data
         self.socket.sendall("VIEW_NOTE".encode(FORMAT))
@@ -261,18 +260,18 @@ class ShowNote:
         self.socket.sendall(content.encode(FORMAT))
 
         # Showing Note's topic and content
-        view_topic = Label(self.frame, width=10, text=topic, 
-                            font=('Roboto', 14), bg='white', fg='black')
-        view_topic.place(x=0, y=0)
+        view_topic = Label(self.frame, width=20, text=topic, 
+                            font=('Roboto', 14),bg='white', fg='black',anchor=W)
+        view_topic.place(x=76, y=95)
 
-        view_content = Label(self.frame, width=10, text=content, 
-                            font=('Roboto', 12), bg='white', fg='black')
-        view_content.place(x=0, y=30)
+        view_content = Label(self.frame, width=40, text=content, 
+                            font=('Roboto', 12), bg='white', fg='black',anchor=W)
+        view_content.place(x=76, y=168)
 
         # Close Note window
-        close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
-        close_btn.place(x=0, y=150)
+        close_btn = Button(self.frame, width=10, text="Close", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='white', fg='#009156', command=self.close_window)
+        close_btn.place(x=53, y=446)
 
         self.root.mainloop()
 
@@ -311,14 +310,14 @@ class ShowFile:
             cv2.imshow('Viewing Image', img)
 
         # Download button
-        dwn_btn = Button(self.frame, width=10, text="Download", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.download_file)
+        dwn_btn = Button(self.frame, width=10, text="Download", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.download_file)
         dwn_btn.place(x=13, y=20)
 
 
         # Close window button
-        close_btn = Button(self.frame, width=10, text="Close", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.close_window)
+        close_btn = Button(self.frame, width=10, text="Close", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#009156', fg='white', command=self.close_window)
         close_btn.place(x=13, y=50)
 
         self.root.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -405,35 +404,41 @@ class MainHome:
         self.frame.place(x=0, y=0)
         self.filepath = ""
 
+        bg = PhotoImage(file = './images/main_menu.png')
+        title_label = Label(self.frame,image=bg)
+        title_label.image = bg
+        title_label.pack(fill='both', expand='yes')
+        title_label.place(x=0,y=0)
+
         # New text file button
-        browse_text = Button(self.frame, width=10, text="Browse text", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_text)
-        browse_text.place(x=0, y=350)
+        browse_text = Button(self.frame, width=10, text="Browse text", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#168E60', fg='white', command=self.add_text)
+        browse_text.place(x=346, y=444)
 
         # New image file button
-        browse_image = Button(self.frame, width=10, text="Browse image", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.add_image)
-        browse_image.place(x=0, y=400)
+        browse_image = Button(self.frame, width=10, text="Browse image", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#168E60', fg='white', command=self.add_image)
+        browse_image.place(x=217, y=444)
 
         # Upload note button
-        upload_note_btn = Button(self.frame, width=10, text="Upload note", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_note)
-        upload_note_btn.place(x=0, y=450)
+        upload_note_btn = Button(self.frame, width=10, text="Upload note", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#04C582', fg='white', command=self.upload_note)
+        upload_note_btn.place(x=36, y=444)
 
         # Upload file button
-        upload_file_btn = Button(self.frame, width=10, text="Upload file", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.upload_file)
-        upload_file_btn.place(x=100, y=400)
+        upload_file_btn = Button(self.frame, width=10, text="Upload file", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='#04C582', fg='white', command=self.upload_file)
+        upload_file_btn.place(x=475, y=444)
 
         # Refresh listbox
-        refresh = Button(self.frame, width=10, text="Refresh", activebackground='red', 
-                        font=('Roboto', 11), bd=0, bg='black', fg='white', command=self.update_list)
-        refresh.place(x=100, y=450)
+        refresh = Button(self.frame, width=10, text="Refresh", activebackground='#ffcd6e', 
+                        font=('Roboto', 11), bd=0, bg='white', fg='#04C582', command=self.update_list)
+        refresh.place(x=782, y=444)
 
         # Note list handling
         self.notelist = Listbox(self.frame, width=30, height=10, bd=0, font=('Roboto', 16),
                                 highlightthickness=0, selectbackground='#D4D4D4')
-        self.notelist.place(x=0, y=0)
+        self.notelist.place(x=42, y=70)
 
         self.notelist.bind("<<ListboxSelect>>", self.show_note)
         
@@ -441,7 +446,7 @@ class MainHome:
         # File list handling
         self.filelist = Listbox(self.frame, width=30, height=10, bd=0, font=('Roboto', 16),
                                 highlightthickness=0, selectbackground='#D4D4D4')
-        self.filelist.place(x=565, y=0)
+        self.filelist.place(x=485, y=70)
 
         self.filelist.bind("<<ListboxSelect>>", self.show_file)
         

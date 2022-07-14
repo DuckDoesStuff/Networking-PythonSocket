@@ -6,6 +6,14 @@ import os
 special_char = ["~","`","!","@","#","$","%","^","&","*","(",")",
                 "-","_","+","=","{","}","[","]",":",";","\"",
                 "'","<",">","/","?","|","\\",".",","]
+
+def init_file():
+    if not os.path.exists("./storage/"):
+        os.mkdir("./storage/")
+    if not os.path.exists("./temp/"):
+        os.mkdir("./temp/")
+
+
 def checkSpecialChar(username):
     if any(x in username for x in special_char):
         return True
@@ -327,6 +335,7 @@ SERVER = socket(AF_INET, SOCK_STREAM)
 SERVER.bind(ADDR)
 
 if __name__ == "__main__":
+    init_file()
     SERVER.listen(5)
     print("Waiting for connection...")
     ACCEPT_THREAD = Thread(target=accept_incoming_connections)

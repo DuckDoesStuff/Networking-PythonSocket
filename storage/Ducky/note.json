@@ -1,17 +1,12 @@
 [
     {
         "id": 1,
-        "topic": "Test",
-        "content": "123\n"
+        "topic": "hih",
+        "content": "hihi\n"
     },
     {
         "id": 2,
-        "topic": "Haha",
-        "content": "Huhu\n"
-    },
-    {
-        "id": 3,
-        "topic": "CANCEL",
-        "content": "ADD_NOTE"
+        "topic": "hihihih",
+        "content": "Z\u1ecbt hong ch\u1ecbu \u0103n th\u1eadt b\u1ef1c m\u00ecnh\n"
     }
 ]

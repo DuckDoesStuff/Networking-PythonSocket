@@ -293,9 +293,10 @@ class ShowFile:
         self.save_temp()
 
         # View image
-        path = './temp/' + self.file_name
-        img = cv2.imread(path)
-        cv2.imshow('Viewing Image', img)
+        if not os.path.splitext(self.file_name)[1] == ".txt":
+            path = './temp/' + self.file_name
+            img = cv2.imread(path)
+            cv2.imshow('Viewing Image', img)
 
         # Download button
         dwn_btn = Button(self.frame, width=10, text="Download", activebackground='red', 
